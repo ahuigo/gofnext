@@ -18,8 +18,8 @@ func TestRedisCacheFuncWithTTL(t *testing.T) {
 	// Cacheable Function
 	getUserScoreFromDbWithCache := decorator.DecoratorFn1(getUserScore, &decorator.Config{
 		Timeout:  time.Hour,
-		CacheMap: decorator.NewRedisMap("redis-cache-key").ClearAll(),
-	}) 
+		CacheMap: decorator.NewRedisMap("redis-cache-key", nil).ClearAll(),
+	})
 
 	// Parallel invocation of multiple functions.
 	for i := 0; i < 10; i++ {
@@ -46,7 +46,7 @@ func TestRedisCacheFuncWithNoTTL(t *testing.T) {
 	getUserScoreFromDbWithCache := decorator.DecoratorFn1(
 		getUserScore,
 		&decorator.Config{
-			CacheMap: decorator.NewRedisMap("cachemap").ClearAll(),
+			CacheMap: decorator.NewRedisMap("redis-cache-key", nil).ClearAll(),
 		},
 	) // getFunc can only accept 1 parameter
 

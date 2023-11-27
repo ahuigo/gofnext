@@ -77,7 +77,7 @@ Refer to: [decorator redis example](https://github.com/ahuigo/gocache-decorator/
         // Cacheable Function
         getUserScoreFromDbWithCache = decorator.DecoratorFn1(getUserScore, &decorator.Config{
             Timeout:  time.Hour,
-            CacheMap: decorator.NewRedisMap("redis-cache-key"),
+            CacheMap: decorator.NewRedisMap("redis-cache-key", nil),
         }) 
     )
 
