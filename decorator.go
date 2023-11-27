@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"sync"
 	"time"
+
+	"github.com/ahuigo/gocache-decorator/goid"
 )
 
 type Config struct {
@@ -17,10 +19,10 @@ type Config struct {
 type cachedFn[Ctx any, K any, V any] struct {
 	mu sync.RWMutex
 	// cacheMap       sync.Map
-	cacheMap       CacheMap
-	pkeyLocks sync.Map
-	keyLen         int
-	getFunc        func(Ctx, K) (V, error)
+	cacheMap  CacheMap
+	pkeyLockMap sync.Map
+	keyLen    int
+	getFunc   func(Ctx, K) (V, error)
 }
 
 // Cache Function with ctx and 1 parameter
@@ -82,13 +84,13 @@ func (c *cachedFn[Ctx, K, V]) setConfig(config *Config) *cachedFn[Ctx, K, V] {
 	if config == nil {
 		config = &Config{}
 	}
-	if config.CacheMap==nil  {
+	if config.CacheMap == nil {
 		config.CacheMap = NewCacheMap(config.Timeout)
 	}
 
 	// init value
 	c.cacheMap = config.CacheMap
-	if config.Timeout>0 {
+	if config.Timeout > 0 {
 		c.cacheMap.SetTTL(config.Timeout)
 	}
 	return c
@@ -115,38 +117,57 @@ func (c *cachedFn[Ctx, K, V]) invoke2(key1 Ctx, key2 K) (retv V, err error) {
 	// 2. require lock for each pkey(go routine safe)
 	var tmpOnce sync.RWMutex
 	pkeyLock := &tmpOnce
-	pkeyLockInter, loaded := c.pkeyLocks.LoadOrStore(pkey, pkeyLock)
+	pkeyLockInter, loaded := c.pkeyLockMap.LoadOrStore(pkey, pkeyLock)
 	if loaded {
 		pkeyLock = pkeyLockInter.(*sync.RWMutex)
+		fmt.Printf("key:%v,gid:%d,lock:%p\n",pkey, goid.Get(), pkeyLock)
 	}
 
 	// 3. check cache
 checkCache:
 	checkCacheCount++
 	pkeyLock.RLock()
-	value, hasCache,err := c.cacheMap.Load(pkey)
+	value, hasCache, err := c.cacheMap.Load(pkey)
 	pkeyLock.RUnlock()
 
 	// 3.1 check if marshal needed
-	if hasCache && c.cacheMap.IsMarshalNeeded(){
+	if hasCache && c.cacheMap.IsMarshalNeeded() {
 		err = json.Unmarshal(value.([]byte), &retv)
 		return retv, err
 	}
 
 	// 4. Execute getFunc(only once)
-	if !hasCache{
+	if !hasCache {
 		// 4.1 try lock
-		// If 100 goroutines call the same function at the same time, 
+		// If 100 goroutines call the same function at the same time,
 		// only one goroutine can execute the getFunc.
-		isLocked:= pkeyLock.TryLock()
-		if !isLocked{
+		a0 := time.Now()
+		isLocked := pkeyLock.TryLock()
+		a1 := time.Since(a0)
+		c0 := time.Now()
+		fmt.Println(a1)
+		a2 := time.Since(c0)
+		fmt.Println("a2", a2)
+
+		if !isLocked {
 			// wait for other goroutine to finish
-			pkeyLock.Lock() 
+			s0 := time.Now()
+			pkeyLock.Lock()
+			s1 := time.Since(s0)
 			// release lock and check cache again
-			if checkCacheCount <3 {
+			if checkCacheCount < 100 {
 				pkeyLock.Unlock()
+				time.Sleep(time.Millisecond * 10)
+				if pkey == 1 {
+					fmt.Println(goid.Get(), pkey, "checkCacheCount:", checkCacheCount, s1, time.Now())
+				}
 				goto checkCache
 			}
+			if pkey == 1 {
+				fmt.Println(goid.Get(), pkey, "checkCacheCountMore:", checkCacheCount, s1, time.Now())
+			}
+		} else {
+				fmt.Println(goid.Get(), pkey, "checkCacheCountFree:", checkCacheCount, time.Now())
 		}
 		defer pkeyLock.Unlock()
 
