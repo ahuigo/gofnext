@@ -70,7 +70,7 @@ func TestCacheFuncWith2Param(t *testing.T) {
 	// Cacheable Function
 	getUserScoreFromDbWithCache := DecoratorFn2(getUserScore, &Config{
 		Timeout: time.Hour,
-	}) // getFunc can only accept 1 parameter
+	}) // getFunc can only accept 2 parameter
 
 	// Parallel invocation of multiple functions.
 	ctx := context.Background()
@@ -93,7 +93,7 @@ func TestCacheFuncWithNilContext(t *testing.T) {
 	getUserScore := func(c context.Context, arg map[int]int) (int, error) {
 		return 98, errors.New("db error")
 	}
-	getUserScoreFromDbWithCache := DecoratorFn2(getUserScore, nil) // getFunc can only accept 1 parameter
+	getUserScoreFromDbWithCache := DecoratorFn2(getUserScore, nil) // getFunc can only accept 2 parameter
 	var ctx context.Context
 	getUserScoreFromDbWithCache(ctx, map[int]int{0: 1})
 }
