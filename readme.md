@@ -9,7 +9,7 @@
 > Refer to: [examples](https://github.com/ahuigo/gocache-decorator/blob/main/examples)
 
 ## CachedFunction with zero param
-Refer to: [cache-function](https://github.com/ahuigo/gocache-decorator/blob/main/examples/cache-function_test.go)
+Refer to: [decorator example](https://github.com/ahuigo/gocache-decorator/blob/main/examples/decorator_test.go)
 
     func getUserAnonymouse() (UserInfo, error) {
         fmt.Println("select * from db limit 1", time.Now())
@@ -31,7 +31,7 @@ Refer to: [cache-function](https://github.com/ahuigo/gocache-decorator/blob/main
 
 
 ## CachedFunction with 2 param
-Refer to: [cache-function](https://github.com/ahuigo/gocache-decorator/blob/main/examples/cache-function_test.go)
+> Refer to: [decorator example](https://github.com/ahuigo/gocache-decorator/blob/main/examples/decorator_test.go)
 
     func TestCacheFuncWith2Param(t *testing.T) {
         // Original function
@@ -63,3 +63,6 @@ Refer to: [cache-function](https://github.com/ahuigo/gocache-decorator/blob/main
             t.Errorf("executeCount should be 3, but get %d", executeCount)
         }
     }
+
+## CachedFunction with redis
+> Refer to: [decorator redis example](https://github.com/ahuigo/gocache-decorator/blob/main/examples/decorator-redis_test.go)
