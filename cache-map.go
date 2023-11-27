@@ -12,7 +12,7 @@ type cachedValue struct{
 
 type cacheMap struct{
 	*sync.Map
-	mu sync.RWMutex
+	// mu sync.RWMutex
 	timeout time.Duration
 }
 
@@ -33,8 +33,6 @@ func (m *cacheMap) Store(key, value any, err error) {
 }
 
 func (m *cacheMap) Load(key any) (value any, existed bool, err error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
 	elInter, existed := m.Map.Load(key)
 	if existed {
 		el := elInter.(*cachedValue)
@@ -50,4 +48,8 @@ func (m *cacheMap) Load(key any) (value any, existed bool, err error) {
 
 func (m *cacheMap) SetTTL(timeout time.Duration) {
 	m.timeout = timeout
+}
+
+func (m *cacheMap) IsMarshalNeeded() bool {
+	return false
 }

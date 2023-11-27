@@ -2,7 +2,6 @@ package decorator
 
 import (
 	"container/list"
-	"fmt"
 	"sync"
 	"time"
 )
@@ -43,7 +42,7 @@ func (m *cacheLru) Store(key, value any, err error) {
 		createdAt: time.Now(),
 		err:       err,
 	}
-	fmt.Println(m.maxSize, m.list.Len(), key)
+	// fmt.Println(m.maxSize, m.list.Len(), key)
 	if m.maxSize > 0 && m.list.Len() >= m.maxSize {
 		elInter := m.list.Back()
 		m.list.Remove(elInter)
@@ -75,4 +74,8 @@ func (m *cacheLru) Load(key any) (value any, existed bool, err error) {
 
 func (m *cacheLru) SetTTL(timeout time.Duration) {
 	m.timeout = timeout
+}
+
+func (m *cacheLru) IsMarshalNeeded() bool {
+	return false
 }

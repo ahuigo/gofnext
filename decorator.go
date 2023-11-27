@@ -95,7 +95,7 @@ func (c *cachedFn[Ctx, K, V]) setConfig(config *Config) *cachedFn[Ctx, K, V] {
 
 // Invoke cached function with 2 parameter
 func (c *cachedFn[Ctx, K, V]) invoke2(key1 Ctx, key2 K) (retv V, err error) {
-	// pkey
+	// 1. generate pkey
 	var pkey any = key2
 	if _, hasCtx := any(key1).(context.Context); hasCtx || c.keyLen <= 1 {
 		// ignore context key
@@ -107,30 +107,27 @@ func (c *cachedFn[Ctx, K, V]) invoke2(key1 Ctx, key2 K) (retv V, err error) {
 		pkey = fmt.Sprintf("%#v,%#v", key1, key2)
 	}
 
-	// check cache
-	value, hasCache,err := c.cacheMap.Load(pkey)
-	if !hasCache {
-		// c.mu.Lock()
-		// defer c.mu.Unlock()
-		// clean up routineOnceMap key if cache is expired
-		// c.routineOnceMap.Delete(pkey)
+	// 2. require lock for each pkey(go routine safe)
+	var tmpOnce sync.RWMutex
+	pkeyLock := &tmpOnce
+	pkeyLockInter, loaded := c.routineOnceMap.LoadOrStore(pkey, pkeyLock)
+	if loaded {
+		pkeyLock = pkeyLockInter.(*sync.RWMutex)
 	}
 
+	// 3. check cache
+	pkeyLock.RLock()
+	value, hasCache,err := c.cacheMap.Load(pkey)
+	pkeyLock.RUnlock()
+
 	if !hasCache{
-		var tmpOnce sync.Once
-		oncePtr := &tmpOnce
-		// 1. load or store routineOnceMap key (go routine safe)
-		onceInterface, loaded := c.routineOnceMap.LoadOrStore(pkey, oncePtr)
-		if loaded {
-			oncePtr = onceInterface.(*sync.Once)
-		}
-		// 2. Execute getFunc(only once)
-		oncePtr.Do(func() {
-			defer c.routineOnceMap.Delete(pkey)
-			val, err := c.getFunc(key1, key2)
-			c.cacheMap.Store(pkey, &val, err)
-		})
-		value, _, err = c.cacheMap.Load(pkey)
+		// 4. Execute getFunc(only once)
+		pkeyLock.Lock()
+		defer pkeyLock.Unlock()
+
+		val, err := c.getFunc(key1, key2)
+		c.cacheMap.Store(pkey, &val, err)
+		return val, err
 	}
 	return *(value).(*V), err
 }
