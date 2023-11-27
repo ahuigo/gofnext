@@ -2,6 +2,7 @@ package decorator
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"sync"
@@ -17,7 +18,7 @@ type cachedFn[Ctx any, K any, V any] struct {
 	mu sync.RWMutex
 	// cacheMap       sync.Map
 	cacheMap       CacheMap
-	routineOnceMap sync.Map
+	pkeyLocks sync.Map
 	keyLen         int
 	getFunc        func(Ctx, K) (V, error)
 }
@@ -95,6 +96,10 @@ func (c *cachedFn[Ctx, K, V]) setConfig(config *Config) *cachedFn[Ctx, K, V] {
 
 // Invoke cached function with 2 parameter
 func (c *cachedFn[Ctx, K, V]) invoke2(key1 Ctx, key2 K) (retv V, err error) {
+	// init
+	checkCacheCount := 0
+	_ = checkCacheCount
+
 	// 1. generate pkey
 	var pkey any = key2
 	if _, hasCtx := any(key1).(context.Context); hasCtx || c.keyLen <= 1 {
@@ -110,21 +115,42 @@ func (c *cachedFn[Ctx, K, V]) invoke2(key1 Ctx, key2 K) (retv V, err error) {
 	// 2. require lock for each pkey(go routine safe)
 	var tmpOnce sync.RWMutex
 	pkeyLock := &tmpOnce
-	pkeyLockInter, loaded := c.routineOnceMap.LoadOrStore(pkey, pkeyLock)
+	pkeyLockInter, loaded := c.pkeyLocks.LoadOrStore(pkey, pkeyLock)
 	if loaded {
 		pkeyLock = pkeyLockInter.(*sync.RWMutex)
 	}
 
 	// 3. check cache
+checkCache:
+	checkCacheCount++
 	pkeyLock.RLock()
 	value, hasCache,err := c.cacheMap.Load(pkey)
 	pkeyLock.RUnlock()
 
+	// 3.1 check if marshal needed
+	if hasCache && c.cacheMap.IsMarshalNeeded(){
+		err = json.Unmarshal(value.([]byte), &retv)
+		return retv, err
+	}
+
+	// 4. Execute getFunc(only once)
 	if !hasCache{
-		// 4. Execute getFunc(only once)
-		pkeyLock.Lock()
+		// 4.1 try lock
+		// If 100 goroutines call the same function at the same time, 
+		// only one goroutine can execute the getFunc.
+		isLocked:= pkeyLock.TryLock()
+		if !isLocked{
+			// wait for other goroutine to finish
+			pkeyLock.Lock() 
+			// release lock and check cache again
+			if checkCacheCount <3 {
+				pkeyLock.Unlock()
+				goto checkCache
+			}
+		}
 		defer pkeyLock.Unlock()
 
+		// 4.2 check cache again
 		val, err := c.getFunc(key1, key2)
 		c.cacheMap.Store(pkey, &val, err)
 		return val, err

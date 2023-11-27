@@ -2,6 +2,7 @@ package decorator
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -9,48 +10,69 @@ import (
 	"github.com/go-redis/redis"
 )
 
-type RedisMap struct {
+type redisMap struct {
 	mu sync.Mutex
 	redisClient redis.UniversalClient 
 	ttl time.Duration
 	redisPreKey string
 }
 
+type redisData struct{
+	Data []byte
+	Err []byte
+	CreatedAt time.Time
+	TTL time.Duration
+}
 
-func NewRedisMap() *RedisMap{
+
+func NewRedisMap(mapKey string) *redisMap{
+	if mapKey == "" {
+		panic("mapKey can not be empty")
+	}
 	redisAddr := "redis:6379"
 	redisClient := redis.NewUniversalClient(&redis.UniversalOptions{
 		Addrs: []string{redisAddr},
 		DB:    0,
 	})
-	return &RedisMap{
+	return &redisMap{
 		redisClient: redisClient,
-		redisPreKey: "cachemap",
+		redisPreKey: mapKey,
 	}
 }
 
-func (m *RedisMap) Store(key, value any) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+func (m *redisMap) ClearAll() *redisMap {
+	m.redisClient.Del(m.redisPreKey)
+	return m
+}
 
+func (m *redisMap) strkey(key any) string {
+	r := fmt.Sprintf("%#v", key)
+	return r
+}
+
+func (m *redisMap) Store(key, value any, err error) {
 	pkey := m.strkey(key)
-	data, err := json.Marshal(value)
+	data, _ := json.Marshal(value)
+	cacheData := redisData{
+		Data: data,
+		TTL: m.ttl,
+	}
+	if m.ttl>0{
+		cacheData.CreatedAt = time.Now()
+	}
 	if err != nil {
-		return err
+		cacheData.Err = []byte(err.Error())
 	}
-	err = m.redisClient.Set(pkey, data, m.ttl).Err()
-	return err
+	val,_ := json.Marshal(cacheData)
+	m.redisClient.HSet(m.redisPreKey, pkey, val).Err()
 }
 
-func (m *RedisMap) strkey(key any) string {
-	return fmt.Sprintf("%s:%#v", m.redisPreKey, key)
-}
 
-func (m *RedisMap) Load(key any) (value any, existed bool, err error) {
+func (m *redisMap) Load(key any) (value any, existed bool, err error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	pkey := m.strkey(key)
-	value, err = m.redisClient.Get(pkey).Bytes()
+	val, err := m.redisClient.HGet(m.redisPreKey,pkey).Bytes()
 	// m.redisClient.TTL()
 	if err == redis.Nil	{
 		existed = false
@@ -59,6 +81,27 @@ func (m *RedisMap) Load(key any) (value any, existed bool, err error) {
 	}else if err != nil {
 		return
 	}
+	cacheData := redisData{}
+	err=json.Unmarshal(val, &cacheData)
+	if err != nil {
+		return
+	}
+
+	value = cacheData.Data
+	if cacheData.Err != nil {
+		err = errors.New(string(cacheData.Err))
+	}
+	if cacheData.TTL>0 && time.Since(cacheData.CreatedAt) > cacheData.TTL {
+		return value, false, nil //expired
+	}
 	existed = true
 	return
+}
+
+func (m *redisMap) SetTTL(timeout time.Duration) {
+	m.ttl = timeout
+}
+
+func (m *redisMap) IsMarshalNeeded() bool {
+	return true
 }
