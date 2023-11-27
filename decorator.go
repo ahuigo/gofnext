@@ -8,20 +8,16 @@ import (
 	"time"
 )
 
-type cachedObjType struct {
-	val       interface{}
-	createdAt time.Time
-	err       error
-}
 type Config struct {
-	Timeout time.Duration
+	Timeout  time.Duration
+	CacheMap CacheMap
 }
 
 type cachedFn[Ctx any, K any, V any] struct {
-	mu             sync.RWMutex
-	cacheMap       sync.Map
+	mu sync.RWMutex
+	// cacheMap       sync.Map
+	cacheMap       CacheMap
 	routineOnceMap sync.Map
-	timeout        time.Duration
 	keyLen         int
 	getFunc        func(Ctx, K) (V, error)
 }
@@ -32,9 +28,7 @@ func DecoratorFn2[Ctx any, K any, V any](
 	config *Config,
 ) func(Ctx, K) (V, error) {
 	ins := &cachedFn[Ctx, K, V]{getFunc: getFunc, keyLen: 2}
-	if config != nil {
-		ins.timeout = config.Timeout
-	}
+	ins.setConfig(config)
 	return ins.invoke2
 }
 
@@ -47,9 +41,7 @@ func DecoratorFn1[K any, V any](
 		return getFunc(key)
 	}
 	ins := &cachedFn[context.Context, K, V]{getFunc: getFunc0, keyLen: 1}
-	if config != nil {
-		ins.timeout = config.Timeout
-	}
+	ins.setConfig(config)
 	return ins.invoke1
 }
 
@@ -62,9 +54,7 @@ func DecoratorFn0[V any](
 		return getFunc()
 	}
 	ins := &cachedFn[context.Context, int8, V]{getFunc: getFunc0, keyLen: 0}
-	if config != nil {
-		ins.timeout = config.Timeout
-	}
+	ins.setConfig(config)
 	return ins.invoke0
 }
 
@@ -83,15 +73,28 @@ func (c *cachedFn[Ctx, K, V]) invoke1(key K) (V, error) {
 	return c.invoke2(ctx, key)
 }
 
-func (c *cachedFn[Ctx, K, V]) SetConfig(config Config) *cachedFn[Ctx, K, V] {
+func (c *cachedFn[Ctx, K, V]) setConfig(config *Config) *cachedFn[Ctx, K, V] {
 	c.mu.Lock()
-	c.timeout = config.Timeout
-	c.mu.Unlock()
+	defer c.mu.Unlock()
+
+	// default value
+	if config == nil {
+		config = &Config{}
+	}
+	if config.CacheMap==nil  {
+		config.CacheMap = NewCacheMap(config.Timeout)
+	}
+
+	// init value
+	c.cacheMap = config.CacheMap
+	if config.Timeout>0 {
+		c.cacheMap.SetTTL(config.Timeout)
+	}
 	return c
 }
 
 // Invoke cached function with 2 parameter
-func (c *cachedFn[Ctx, K, V]) invoke2(key1 Ctx, key2 K) (V, error) {
+func (c *cachedFn[Ctx, K, V]) invoke2(key1 Ctx, key2 K) (retv V, err error) {
 	// pkey
 	var pkey any = key2
 	if _, hasCtx := any(key1).(context.Context); hasCtx || c.keyLen <= 1 {
@@ -105,53 +108,29 @@ func (c *cachedFn[Ctx, K, V]) invoke2(key1 Ctx, key2 K) (V, error) {
 	}
 
 	// check cache
-	needRefresh := false
-	value, hasCache := c.cacheMap.Load(pkey)
-	if hasCache {
-		cachedObj := value.(*cachedObjType)
-		if c.timeout > 0 && time.Since(cachedObj.createdAt) > c.timeout {
-			needRefresh = true
-		}
+	value, hasCache,err := c.cacheMap.Load(pkey)
+	if !hasCache {
+		// c.mu.Lock()
+		// defer c.mu.Unlock()
+		// clean up routineOnceMap key if cache is expired
+		// c.routineOnceMap.Delete(pkey)
 	}
 
-	if !hasCache || needRefresh {
+	if !hasCache{
 		var tmpOnce sync.Once
 		oncePtr := &tmpOnce
-		//1. clean up routineOnceMap key
-		if needRefresh {
-			c.routineOnceMap.Delete(pkey)
-		}
-		// 2. load or store routineOnceMap key
+		// 1. load or store routineOnceMap key (go routine safe)
 		onceInterface, loaded := c.routineOnceMap.LoadOrStore(pkey, oncePtr)
 		if loaded {
 			oncePtr = onceInterface.(*sync.Once)
 		}
-		// 3. Execute getFunc(only once)
+		// 2. Execute getFunc(only once)
 		oncePtr.Do(func() {
+			defer c.routineOnceMap.Delete(pkey)
 			val, err := c.getFunc(key1, key2)
-			createdAt := time.Now()
-			c.cacheMap.Store(pkey, &cachedObjType{val: &val, err: err, createdAt: createdAt})
+			c.cacheMap.Store(pkey, &val, err)
 		})
-		value, _ = c.cacheMap.Load(pkey)
+		value, _, err = c.cacheMap.Load(pkey)
 	}
-	cachedObj := value.(*cachedObjType)
-	return *(cachedObj.val).(*V), cachedObj.err
+	return *(value).(*V), err
 }
-
-/*
-func (c *cachedFn[string, V]) Get0() (V, error) {
-	// var s any
-	var s string
-	// s = "abc" // error: cannot use "abc" (untyped string constant) as string value in assignment
-	fmt.Printf("cache key: %#v, %T\n", s, s)
-	return c.Get(s)
-}
-*/
-
-/*
-func (c *cachedFn[int, V]) Get0() (V, error) {
-	var s int = 100 //error: cannot use 100 (untyped int constant) as int value in variable declaration
-	fmt.Printf("cache key: %#v, %T\n", s, s)
-	return c.Get(s)
-}
-*/

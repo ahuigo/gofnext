@@ -25,7 +25,7 @@ func TestCacheFuncWithNoParam(t *testing.T) {
 	}
 
 	// Cacheable Function
-	getUserInfoFromDbWithCache := DecoratorFn0(getUserInfoFromDb, &Config{Timeout: 500 * time.Millisecond}) // getFunc can only accept zero parameter
+	getUserInfoFromDbWithCache := DecoratorFn0(getUserInfoFromDb, &Config{Timeout: 400 * time.Millisecond}) // getFunc can only accept zero parameter
 	_ = getUserInfoFromDbWithCache
 
 	// Parallel invocation of multiple functions.
@@ -57,7 +57,7 @@ func parallelCall(fn func(), times int) {
 	wg.Wait()
 }
 
-func TestCacheFuncWithOneParam(t *testing.T) {
+func TestCacheFuncWith2Param(t *testing.T) {
 	// Original function
 	executeCount := 0
 	getUserScore := func(c context.Context, arg map[int]int) (int, error) {
@@ -68,7 +68,9 @@ func TestCacheFuncWithOneParam(t *testing.T) {
 	}
 
 	// Cacheable Function
-	getUserScoreFromDbWithCache := DecoratorFn2(getUserScore, &Config{Timeout: time.Hour}) // getFunc can only accept 1 parameter
+	getUserScoreFromDbWithCache := DecoratorFn2(getUserScore, &Config{
+		Timeout: time.Hour,
+	}) // getFunc can only accept 1 parameter
 
 	// Parallel invocation of multiple functions.
 	ctx := context.Background()
@@ -81,7 +83,7 @@ func TestCacheFuncWithOneParam(t *testing.T) {
 	}, 10)
 
 	if executeCount != 3 {
-		t.Error("executeCount should be 3")
+		t.Errorf("executeCount should be 3, but get %d", executeCount)
 	}
 
 }
@@ -93,4 +95,34 @@ func TestCacheFuncWithNilContext(t *testing.T) {
 	getUserScoreFromDbWithCache := DecoratorFn2(getUserScore, nil) // getFunc can only accept 1 parameter
 	var ctx context.Context
 	getUserScoreFromDbWithCache(ctx, map[int]int{0: 1})
+}
+
+func TestCacheFuncWithOneParamLRU(t *testing.T) {
+	// Original function
+	executeCount := 0
+	getUserScore := func(more int) (int, error) {
+		executeCount++
+		return 98+more, errors.New("db error")
+	}
+
+	// Cacheable Function
+	getUserScoreFromDbWithCache := DecoratorFn1(getUserScore, &Config{
+		Timeout: time.Hour,
+		CacheMap: NewCacheLru(2, time.Second),
+	}) // getFunc can only accept 1 parameter
+
+	// Parallel invocation of multiple functions.
+	for i:=0;i<10;i++{
+		score, err := getUserScoreFromDbWithCache(1)
+		fmt.Println(score, err)
+		score, err = getUserScoreFromDbWithCache(2)
+		fmt.Println(score, err)
+		getUserScoreFromDbWithCache(3)
+		getUserScoreFromDbWithCache(3)
+	}
+
+	if executeCount != 30 {
+		t.Errorf("executeCount should be 30, but get %d", executeCount)
+	}
+
 }
