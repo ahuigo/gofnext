@@ -64,7 +64,7 @@ func TestCacheFuncWith2Param(t *testing.T) {
 		executeCount++
 		fmt.Println("select score from db where id=", arg[0], time.Now())
 		time.Sleep(10 * time.Millisecond)
-		return 98, errors.New("db error")
+		return 98+arg[0], errors.New("db error")
 	}
 
 	// Cacheable Function
@@ -75,10 +75,11 @@ func TestCacheFuncWith2Param(t *testing.T) {
 	// Parallel invocation of multiple functions.
 	ctx := context.Background()
 	parallelCall(func() {
-		score, err := getUserScoreFromDbWithCache(ctx, map[int]int{0: 1})
-		fmt.Println(score, err)
-		score, err = getUserScoreFromDbWithCache(ctx, map[int]int{0: 2})
-		fmt.Println(score, err)
+		score, _ := getUserScoreFromDbWithCache(ctx, map[int]int{0: 1})
+		if score != 99 {
+			t.Errorf("score should be 99, but get %d", score)
+		}
+		getUserScoreFromDbWithCache(ctx, map[int]int{0: 2})
 		getUserScoreFromDbWithCache(ctx, map[int]int{0: 3})
 	}, 10)
 

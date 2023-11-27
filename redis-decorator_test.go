@@ -60,9 +60,9 @@ func TestRedisCacheFuncWithNoTTL(t *testing.T) {
 		if err!=nil ||score != 99 {
 			t.Errorf("score should be 99, but get %d", score)
 		}
-		// getUserScoreFromDbWithCache(2)
-		// getUserScoreFromDbWithCache(3)
-		// getUserScoreFromDbWithCache(3)
+		getUserScoreFromDbWithCache(2)
+		getUserScoreFromDbWithCache(3)
+		getUserScoreFromDbWithCache(3)
 	}, 10)
 
 	if executeCount != 3 {

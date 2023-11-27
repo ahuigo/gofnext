@@ -7,8 +7,6 @@ import (
 	"reflect"
 	"sync"
 	"time"
-
-	"github.com/ahuigo/gocache-decorator/goid"
 )
 
 type Config struct {
@@ -19,10 +17,10 @@ type Config struct {
 type cachedFn[Ctx any, K any, V any] struct {
 	mu sync.RWMutex
 	// cacheMap       sync.Map
-	cacheMap  CacheMap
+	cacheMap    CacheMap
 	pkeyLockMap sync.Map
-	keyLen    int
-	getFunc   func(Ctx, K) (V, error)
+	keyLen      int
+	getFunc     func(Ctx, K) (V, error)
 }
 
 // Cache Function with ctx and 1 parameter
@@ -66,7 +64,6 @@ func (c *cachedFn[any, int, V]) invoke0() (V, error) {
 	var ctx any
 	var key int
 	// key = 0                                    // error: cannot use 0 (untyped int constant) as uint8 value in assignment
-	fmt.Printf("cache key: %#v, %T\n", key, key) // cache key: 0, uint8
 	return c.invoke2(ctx, key)
 }
 
@@ -120,7 +117,6 @@ func (c *cachedFn[Ctx, K, V]) invoke2(key1 Ctx, key2 K) (retv V, err error) {
 	pkeyLockInter, loaded := c.pkeyLockMap.LoadOrStore(pkey, pkeyLock)
 	if loaded {
 		pkeyLock = pkeyLockInter.(*sync.RWMutex)
-		fmt.Printf("key:%v,gid:%d,lock:%p\n",pkey, goid.Get(), pkeyLock)
 	}
 
 	// 3. check cache
@@ -141,33 +137,20 @@ checkCache:
 		// 4.1 try lock
 		// If 100 goroutines call the same function at the same time,
 		// only one goroutine can execute the getFunc.
-		a0 := time.Now()
 		isLocked := pkeyLock.TryLock()
-		a1 := time.Since(a0)
-		c0 := time.Now()
-		fmt.Println(a1)
-		a2 := time.Since(c0)
-		fmt.Println("a2", a2)
 
 		if !isLocked {
-			// wait for other goroutine to finish
-			s0 := time.Now()
-			pkeyLock.Lock()
-			s1 := time.Since(s0)
-			// release lock and check cache again
-			if checkCacheCount < 100 {
-				pkeyLock.Unlock()
+			if checkCacheCount < 3 {
+				// wait for other goroutine to finish
 				time.Sleep(time.Millisecond * 10)
-				if pkey == 1 {
-					fmt.Println(goid.Get(), pkey, "checkCacheCount:", checkCacheCount, s1, time.Now())
-				}
+
+				// Avoid all goroutines calling TryCount simultaneously, which may lead to failure.
+				sleepRandom(0, 50*time.Millisecond)
+
+				// try lock again
 				goto checkCache
 			}
-			if pkey == 1 {
-				fmt.Println(goid.Get(), pkey, "checkCacheCountMore:", checkCacheCount, s1, time.Now())
-			}
-		} else {
-				fmt.Println(goid.Get(), pkey, "checkCacheCountFree:", checkCacheCount, time.Now())
+			pkeyLock.Lock()
 		}
 		defer pkeyLock.Unlock()
 
