@@ -10,20 +10,20 @@ type cachedValue struct{
 	err       error
 }
 
-type cacheMap struct{
+type memCacheMap struct{
 	*sync.Map
 	// mu sync.RWMutex
 	timeout time.Duration
 }
 
-func NewCacheMap(timeout time.Duration) *cacheMap{
-	return &cacheMap{
+func newCacheMapMem(timeout time.Duration) *memCacheMap{
+	return &memCacheMap{
 		timeout: timeout,
 		Map: &sync.Map{},
 	}
 }
 
-func (m *cacheMap) Store(key, value any, err error) {
+func (m *memCacheMap) Store(key, value any, err error) {
 	el := cachedValue{
 		val: value,
 		createdAt: time.Now(),
@@ -32,7 +32,7 @@ func (m *cacheMap) Store(key, value any, err error) {
 	m.Map.Store(key, &el)
 }
 
-func (m *cacheMap) Load(key any) (value any, existed bool, err error) {
+func (m *memCacheMap) Load(key any) (value any, existed bool, err error) {
 	elInter, existed := m.Map.Load(key)
 	if existed {
 		el := elInter.(*cachedValue)
@@ -46,10 +46,10 @@ func (m *cacheMap) Load(key any) (value any, existed bool, err error) {
 	return
 }
 
-func (m *cacheMap) SetTTL(timeout time.Duration) {
+func (m *memCacheMap) SetTTL(timeout time.Duration) {
 	m.timeout = timeout
 }
 
-func (m *cacheMap) IsMarshalNeeded() bool {
+func (m *memCacheMap) IsMarshalNeeded() bool {
 	return false
 }

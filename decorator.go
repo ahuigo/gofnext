@@ -16,7 +16,6 @@ type Config struct {
 
 type cachedFn[Ctx any, K any, V any] struct {
 	mu sync.RWMutex
-	// cacheMap       sync.Map
 	cacheMap    CacheMap
 	pkeyLockMap sync.Map
 	keyLen      int
@@ -82,7 +81,7 @@ func (c *cachedFn[Ctx, K, V]) setConfig(config *Config) *cachedFn[Ctx, K, V] {
 		config = &Config{}
 	}
 	if config.CacheMap == nil {
-		config.CacheMap = NewCacheMap(config.Timeout)
+		config.CacheMap = newCacheMapMem(config.Timeout)
 	}
 
 	// init value

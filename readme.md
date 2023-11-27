@@ -1,9 +1,14 @@
 # gocache-decorator
+Cache Decorator for Go functions, similar to Python's `functools.cache` and `functools.lru_cache`. \
+Additionally, it supports Redis caching and custom caching.
+
 ## Features
 - [x] Decorator for function cache
 - [x] Goroutine Safe
-- [x] Support customization of the CacheMap
+- [x] Support memory CacheMap(default)
+- [x] Support memory-lru CacheMap
 - [x] Support redis CacheMap
+- [x] Support customization of the CacheMap(manually)
 
 # Examples
 > Refer to: [examples](https://github.com/ahuigo/gocache-decorator/blob/main/examples)
@@ -77,7 +82,7 @@ Refer to: [decorator redis example](https://github.com/ahuigo/gocache-decorator/
         // Cacheable Function
         getUserScoreFromDbWithCache = decorator.DecoratorFn1(getUserScore, &decorator.Config{
             Timeout:  time.Hour,
-            CacheMap: decorator.NewRedisMap("redis-cache-key", nil),
+            CacheMap: decorator.NewCacheRedis("redis-cache-key", nil),
         }) 
     )
 

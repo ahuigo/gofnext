@@ -24,7 +24,7 @@ type redisData struct {
 	TTL       time.Duration
 }
 
-func NewRedisMap(mapKey string, config *redis.UniversalOptions) *redisMap {
+func NewCacheRedis(mapKey string, config *redis.UniversalOptions) *redisMap {
 	if mapKey == "" {
 		panic("mapKey can not be empty")
 	}
