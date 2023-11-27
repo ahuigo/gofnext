@@ -11,6 +11,10 @@
 ## CachedFunction with zero param
 Refer to: [decorator example](https://github.com/ahuigo/gocache-decorator/blob/main/examples/decorator_test.go)
 
+    package examples
+
+    import "github.com/ahuigo/gocache-decorator"
+
     func getUserAnonymouse() (UserInfo, error) {
         fmt.Println("select * from db limit 1", time.Now())
         time.Sleep(10 * time.Millisecond)
