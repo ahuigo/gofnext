@@ -75,7 +75,10 @@ Refer to: [decorator example](https://github.com/ahuigo/gocache-decorator/blob/m
         }
     }
 
-## CachedFunction with redis
+## CachedFunction with lru cache
+Refer to: [decorator lru example](https://github.com/ahuigo/gocache-decorator/blob/main/examples/decorator-lru_test.go)
+
+## CachedFunction with redis cache
 Refer to: [decorator redis example](https://github.com/ahuigo/gocache-decorator/blob/main/examples/decorator-redis_test.go)
 
     var (

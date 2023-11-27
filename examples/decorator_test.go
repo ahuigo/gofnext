@@ -66,33 +66,3 @@ func TestCacheFuncWith2Param(t *testing.T) {
 		t.Errorf("executeCount should be 3, but get %d", executeCount)
 	}
 }
-
-func TestCacheFuncWithOneParamLRU(t *testing.T) {
-	// Original function
-	executeCount := 0
-	getUserScore := func(more int) (int, error) {
-		executeCount++
-		return 98 + more, errors.New("db error")
-	}
-
-	// Cacheable Function
-	getUserScoreFromDbWithCache := decorator. DecoratorFn1(getUserScore, &decorator.Config{
-		Timeout:  time.Hour,
-		CacheMap: decorator.NewCacheLru(2, time.Second),
-	}) // getFunc can only accept 1 parameter
-
-	// Parallel invocation of multiple functions.
-	for i := 0; i < 10; i++ {
-		score, err := getUserScoreFromDbWithCache(1)
-		fmt.Println(score, err)
-		score, err = getUserScoreFromDbWithCache(2)
-		fmt.Println(score, err)
-		getUserScoreFromDbWithCache(3)
-		getUserScoreFromDbWithCache(3)
-	}
-
-	if executeCount != 30 {
-		t.Errorf("executeCount should be 30, but get %d", executeCount)
-	}
-
-}
