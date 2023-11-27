@@ -21,10 +21,12 @@ func getUserAnonymouse() (UserInfo, error) {
 	return UserInfo{Name: "Anonymous", Age: 9}, errors.New("db error")
 }
 
-func TestCacheFuncWithNoParam(t *testing.T) {
+var (
 	// Cacheable Function
-	getUserInfoFromDbWithCache := decorator.DecoratorFn0(getUserAnonymouse, nil) 
+	getUserInfoFromDbWithCache = decorator.DecoratorFn0(getUserAnonymouse, nil) 
+)
 
+func TestCacheFuncWithNoParam(t *testing.T) {
 	// Parallel invocation of multiple functions.
 	times := 10
 	parallelCall(func() {

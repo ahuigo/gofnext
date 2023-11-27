@@ -21,10 +21,12 @@ Refer to: [decorator example](https://github.com/ahuigo/gocache-decorator/blob/m
         return UserInfo{Name: "Anonymous", Age: 9}, errors.New("db error")
     }
 
-    func TestCacheFuncWithNoParam(t *testing.T) {
+    var (
         // Cacheable Function
-        getUserInfoFromDbWithCache := decorator.DecoratorFn0(getUserAnonymouse, nil) 
+        getUserInfoFromDbWithCache = decorator.DecoratorFn0(getUserAnonymouse, nil) 
+    )
 
+    func TestCacheFuncWithNoParam(t *testing.T) {
         // Parallel invocation of multiple functions.
         times := 10
         parallelCall(func() {
@@ -69,4 +71,28 @@ Refer to: [decorator example](https://github.com/ahuigo/gocache-decorator/blob/m
     }
 
 ## CachedFunction with redis
-> Refer to: [decorator redis example](https://github.com/ahuigo/gocache-decorator/blob/main/examples/decorator-redis_test.go)
+Refer to: [decorator redis example](https://github.com/ahuigo/gocache-decorator/blob/main/examples/decorator-redis_test.go)
+
+    var (
+        // Cacheable Function
+        getUserScoreFromDbWithCache = decorator.DecoratorFn1(getUserScore, &decorator.Config{
+            Timeout:  time.Hour,
+            CacheMap: decorator.NewRedisMap("redis-cache-key"),
+        }) 
+    )
+
+    func TestRedisCacheFuncWithTTL(t *testing.T) {
+
+        // Parallel invocation of multiple functions.
+        for i := 0; i < 10; i++ {
+            score, err := getUserScoreFromDbWithCache(1)
+            if err != nil || score != 99 {
+                t.Errorf("score should be 99, but get %d", score)
+            }
+        }
+
+    }
+
+> Warning: Since JSON marshaling cannot serialize private data, Redis will lose private data.
+
+
