@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	decorator "github.com/ahuigo/gocache-decorator"
+	"github.com/ahuigo/gofnext"
 )
 
 func TestCacheFuncKeyStruct(t *testing.T) {
@@ -24,7 +24,7 @@ func TestCacheFuncKeyStruct(t *testing.T) {
 	}
 
 	// Cacheable Function
-	getUserScoreFromDbWithCache := decorator.CacheFn1Err(getUserScore, &decorator.Config{
+	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
 		TTL: time.Hour,
 	})
 
@@ -55,7 +55,7 @@ func TestCacheFuncKeyMap(t *testing.T) {
 	}
 
 	// Cacheable Function
-	getUserScoreFromDbWithCache := decorator.CacheFn1Err(getUserScore, &decorator.Config{
+	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
 		TTL: time.Hour,
 	})
 
@@ -89,7 +89,7 @@ func TestCacheFuncKeySlice(t *testing.T) {
 	}
 
 	// Cacheable Function
-	getUserScoreFromDbWithCache := decorator.CacheFn1Err(getUserScore, &decorator.Config{
+	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
 		TTL: time.Hour,
 	})
 
@@ -124,7 +124,7 @@ func TestCacheFuncKeyPointer(t *testing.T) {
 	}
 
 	// Cacheable Function
-	getUserScoreFromDbWithCache := decorator.CacheFn1Err(getUserScore, &decorator.Config{
+	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
 		TTL: time.Hour,
 	})
 
@@ -136,6 +136,45 @@ func TestCacheFuncKeyPointer(t *testing.T) {
 		}
 		getUserScoreFromDbWithCache(&UserInfo{id: 2})
 		getUserScoreFromDbWithCache(&UserInfo{id: 3})
+	}, 10)
+
+	if executeCount != 3 {
+		t.Errorf("executeCount should be 3, but get %d", executeCount)
+	}
+}
+
+func TestCacheFuncKeyInnerPointer(t *testing.T) {
+	type UserInfo struct {
+		Name string
+		Age  int
+		id int
+	}
+	type ExtUserInfo struct {
+		u *UserInfo
+	}
+	// Original function
+	executeCount := 0
+	getUserScore := func(user ExtUserInfo) (int, error) {
+		executeCount++
+		fmt.Println("select score from db where id=", user.u.id, time.Now())
+		time.Sleep(10 * time.Millisecond)
+		return 98 + user.u.id, nil
+	}
+
+	// Cacheable Function
+	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
+		TTL: time.Hour,
+		NeedDumpKey: true,
+	})
+
+	// Parallel invocation of multiple functions.
+	parallelCall(func() {
+		score, _ := getUserScoreFromDbWithCache(ExtUserInfo{u:&UserInfo{id: 1}})
+		if score != 99 {
+			t.Errorf("score should be 99, but get %d", score)
+		}
+		getUserScoreFromDbWithCache(ExtUserInfo{u:&UserInfo{id: 2}})
+		getUserScoreFromDbWithCache(ExtUserInfo{u:&UserInfo{id: 3}})
 	}, 10)
 
 	if executeCount != 3 {

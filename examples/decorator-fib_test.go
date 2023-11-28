@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	decorator "github.com/ahuigo/gocache-decorator"
+	"github.com/ahuigo/gofnext"
 )
 
 // https://stackoverflow.com/questions/73379188/how-to-use-cache-decorator-with-a-recursive-function-in-go
@@ -20,7 +20,7 @@ func TestFib(t *testing.T) {
 		}
 	}
 
-	fibCached = decorator.CacheFn1(fib, nil)
+	fibCached = gofnext.CacheFn1(fib, nil)
 
 	fmt.Println(fibCached(5))
 	fmt.Println(fibCached(6))

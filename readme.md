@@ -1,36 +1,58 @@
-# gocache-decorator
-Cache Decorator for Go functions, similar to Python's `functools.cache` and `functools.lru_cache`. \
-Additionally, it supports Redis caching and custom caching.
+# Go function extended
+This **gofnext** provides the following functions extended. 
+- Cache decorators: Similar to Python's `functools.cache` and `functools.lru_cache`. 
+    - > Additionally, it supports Redis caching and custom caching.
+- Dump: Deep dumper for golang data, it will dump pointer's real value and struct's inner private data.
 
-## Features
-- [x] Decorator cache for function
-- [x] Goroutine Safe
-- [x] Support memory CacheMap(default)
-- [x] Support memory-lru CacheMap
-- [x] Support redis CacheMap
-- [x] Support customization of the CacheMap(manually)
+TOC 
+- [Go function extended](#go-function-extended)
+  - [Decorator cases](#decorator-cases)
+  - [Features](#features)
+  - [Decorator examples](#decorator-examples)
+    - [Cache fibonacii function](#cache-fibonacii-function)
+    - [CachedFunction with zero param](#cachedfunction-with-zero-param)
+    - [CachedFunction with 1 param and no error](#cachedfunction-with-1-param-and-no-error)
+    - [CachedFunction with 2 param](#cachedfunction-with-2-param)
+    - [CachedFunction with lru cache](#cachedfunction-with-lru-cache)
+    - [CachedFunction with redis cache](#cachedfunction-with-redis-cache)
+  - [Object functions](#object-functions)
 
-# Examples
-> Refer to: [examples](https://github.com/ahuigo/gocache-decorator/blob/main/examples)
+## Decorator cases
 
 | function        | decorator             |
 |-----------------|-----------------------|
-| func f() res    | decorator.CacheFn0(f,nil) |
-| func f(a) res   | decorator.CacheFn1(f,nil) |
-| func f(a,b) res | decorator.CacheFn2(f,nil) |
-| func f() (res,err)    | decorator.CacheFn0Err(f,nil) |
-| func f(a) (res,err)   | decorator.CacheFn1Err(f,nil)    |
-| func f(a,b) (res,err) | decorator.CacheFn2Err(f,nil)    |
-| func f() (res,err) | decorator.CacheFn0Err(f, &decorator.Config{TTL: time.Hour})<br/>// memory cache with ttl  |
-| func f() (res) | decorator.CacheFn0(f, &decorator.Config{CacheMap: decorator.NewCacheLru(9999)})  <br/>// Maxsize of cache is 9999|
-| func f() (res) | decorator.CacheFn0(f, &decorator.Config{CacheMap: decorator.NewCacheRedis("cacheKey", nil)})  <br/>// Warning: redis's marshaling may result in data loss|
+| func f() res    | gofnext.CacheFn0(f,nil) |
+| func f(a) res   | gofnext.CacheFn1(f,nil) |
+| func f(a,b) res | gofnext.CacheFn2(f,nil) |
+| func f() (res,err)    | gofnext.CacheFn0Err(f,nil) |
+| func f(a) (res,err)   | gofnext.CacheFn1Err(f,nil)    |
+| func f(a,b) (res,err) | gofnext.CacheFn2Err(f,nil)    |
+| func f() (res,err) | gofnext.CacheFn0Err(f, &gofnext.Config{TTL: time.Hour})<br/>// memory cache with ttl  |
+| func f() (res) | gofnext.CacheFn0(f, &gofnext.Config{CacheMap: gofnext.NewCacheLru(9999)})  <br/>// Maxsize of cache is 9999|
+| func f() (res) | gofnext.CacheFn0(f, &gofnext.Config{CacheMap: gofnext.NewCacheRedis("cacheKey", nil)})  <br/>// Warning: redis's marshaling may result in data loss|
 
-## Cache fibonacii function
-Refer to: [decorator fib example](https://github.com/ahuigo/gocache-decorator/blob/main/examples/fib_test.go)
+## Features
+- [x] Cache Decorator (gofnext)
+    - [x] Decorator cache for function
+    - [x] Goroutine Safe
+    - [x] Support memory CacheMap(default)
+    - [x] Support memory-lru CacheMap
+    - [x] Support redis CacheMap
+    - [x] Support customization of the CacheMap(manually)
+- [x] Dump (gofnext/dump)
+- [x] Object (gofnext/object)
+    - [x] `ConvertObjectByte2String(any)`: Convert Object bytes to string
+
+## Decorator examples
+Refer to: [examples](https://github.com/ahuigo/gofnext/blob/main/examples)
+
+
+### Cache fibonacii function
+Refer to: [decorator fib example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-fib_test.go)
 
     package main
     import "fmt"
-    import "github.com/ahuigo/gocache-decorator"
+    import "github.com/ahuigo/gofnext"
     func main() {
         var fib func(int) int
         var fibCached func(int) int
@@ -43,18 +65,18 @@ Refer to: [decorator fib example](https://github.com/ahuigo/gocache-decorator/bl
             }
         }
 
-        fibCached = decorator.CacheFn1(fib, nil)    
+        fibCached = gofnext.CacheFn1(fib, nil)    
 
         fmt.Println(fibCached(5))
         fmt.Println(fibCached(6))
     }
 
-## CachedFunction with zero param
-Refer to: [decorator example](https://github.com/ahuigo/gocache-decorator/blob/main/examples/decorator_test.go)
+### CachedFunction with zero param
+Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator_test.go)
 
     package examples
 
-    import "github.com/ahuigo/gocache-decorator"
+    import "github.com/ahuigo/gofnext"
 
     func getUserAnonymouse() (UserInfo, error) {
         fmt.Println("select * from db limit 1", time.Now())
@@ -64,7 +86,7 @@ Refer to: [decorator example](https://github.com/ahuigo/gocache-decorator/blob/m
 
     var (
         // Cacheable Function
-        getUserInfoFromDbWithCache = decorator.CacheFn0Err(getUserAnonymouse, nil) 
+        getUserInfoFromDbWithCache = gofnext.CacheFn0Err(getUserAnonymouse, nil) 
     )
 
     func TestCacheFuncWithNoParam(t *testing.T) {
@@ -77,8 +99,8 @@ Refer to: [decorator example](https://github.com/ahuigo/gocache-decorator/blob/m
     }
 
 
-## CachedFunction with 1 param and no error
-Refer to: [decorator example](https://github.com/ahuigo/gocache-decorator/blob/main/examples/decorator-nil_test.go)
+### CachedFunction with 1 param and no error
+Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-nil_test.go)
 
     func getUserNoError(age int) (UserInfo) {
     	time.Sleep(10 * time.Millisecond)
@@ -87,7 +109,7 @@ Refer to: [decorator example](https://github.com/ahuigo/gocache-decorator/blob/m
     
     var (
     	// Cacheable Function with 1 param and no error
-    	getUserInfoFromDbNil= decorator.CacheFn1(getUserNoError, nil) 
+    	getUserInfoFromDbNil= gofnext.CacheFn1(getUserNoError, nil) 
     )
 
     func TestCacheFuncNil(t *testing.T) {
@@ -99,8 +121,8 @@ Refer to: [decorator example](https://github.com/ahuigo/gocache-decorator/blob/m
     	}, times)
     }
 
-## CachedFunction with 2 param
-> Refer to: [decorator example](https://github.com/ahuigo/gocache-decorator/blob/main/examples/decorator_test.go)
+### CachedFunction with 2 param
+> Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator_test.go)
 
     func TestCacheFuncWith2Param(t *testing.T) {
         // Original function
@@ -113,7 +135,7 @@ Refer to: [decorator example](https://github.com/ahuigo/gocache-decorator/blob/m
         }
 
         // Cacheable Function
-        getUserScoreFromDbWithCache := decorator.CacheFn2Err(getUserScore, &decorator.Config{
+        getUserScoreFromDbWithCache := gofnext.CacheFn2Err(getUserScore, &gofnext.Config{
             TTL: time.Hour,
         }) // getFunc can only accept 2 parameter
 
@@ -133,17 +155,17 @@ Refer to: [decorator example](https://github.com/ahuigo/gocache-decorator/blob/m
         }
     }
 
-## CachedFunction with lru cache
-Refer to: [decorator lru example](https://github.com/ahuigo/gocache-decorator/blob/main/examples/decorator-lru_test.go)
+### CachedFunction with lru cache
+Refer to: [decorator lru example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-lru_test.go)
 
-## CachedFunction with redis cache
-Refer to: [decorator redis example](https://github.com/ahuigo/gocache-decorator/blob/main/examples/decorator-redis_test.go)
+### CachedFunction with redis cache
+Refer to: [decorator redis example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-redis_test.go)
 
     var (
         // Cacheable Function
-        getUserScoreFromDbWithCache = decorator.CacheFn1Err(getUserScore, &decorator.Config{
+        getUserScoreFromDbWithCache = gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
             TTL:  time.Hour,
-            CacheMap: decorator.NewCacheRedis("redis-cache-key", nil),
+            CacheMap: gofnext.NewCacheRedis("redis-cache-key", nil),
         }) 
     )
 
@@ -156,9 +178,24 @@ Refer to: [decorator redis example](https://github.com/ahuigo/gocache-decorator/
                 t.Errorf("score should be 99, but get %d", score)
             }
         }
-
     }
 
 > Warning: Since redis needs JSON marshaling, this may result in data loss.
 
+## Object functions
+Refer to: [object example](https://github.com/ahuigo/gofnext/blob/main/examples/object_test.go)
 
+	import "github.com/ahuigo/gofnext/object"
+
+    func TestConvertMapBytes(t *testing.T) {
+        objBytes := map[string][]byte{
+            "k1": []byte("v1"),
+            "k2": []byte("v2"),
+        }
+        out, _ := json.Marshal(objBytes)
+        fmt.Println(string(out))                 //output: {"k1":"djE=","k2":"djI="}
+
+        objString := object.ConvertObjectByte2String(objBytes)
+        out, _ = json.Marshal(objString)
+        fmt.Println(string(out))                 //output: {"k1":"v1","k2":"v2"}
+    }

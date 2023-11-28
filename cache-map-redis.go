@@ -1,4 +1,4 @@
-package decorator
+package gofnext
 
 import (
 	"encoding/json"
@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"crypto/sha512"
+	"encoding/hex"
 
 	"github.com/go-redis/redis"
 )
@@ -15,6 +18,7 @@ type redisMap struct {
 	redisClient redis.UniversalClient
 	ttl         time.Duration
 	redisPreKey string
+	maxHashKeyLen int
 }
 
 type redisData struct {
@@ -39,6 +43,7 @@ func NewCacheRedis(mapKey string, config *redis.UniversalOptions) *redisMap {
 	return &redisMap{
 		redisClient: redisClient,
 		redisPreKey: mapKey,
+		maxHashKeyLen: 2000,
 	}
 }
 
@@ -47,10 +52,22 @@ func (m *redisMap) ClearAll() *redisMap {
 	return m
 }
 
+
 func (m *redisMap) strkey(key any) string {
-	r := fmt.Sprintf("%#v", key)
+	var r string
+	switch rt := key.(type) {
+	case string:
+		r = rt	
+	default:
+		r = fmt.Sprintf("%#v", key)
+	}
+	if len(r) > m.maxHashKeyLen{
+		hash := sha512.Sum512([]byte(r))
+		r = hex.EncodeToString(hash[:])
+	}
 	return r
 }
+
 
 func (m *redisMap) Store(key, value any, err error) {
 	pkey := m.strkey(key)
@@ -99,8 +116,13 @@ func (m *redisMap) Load(key any) (value any, existed bool, err error) {
 	return
 }
 
-func (m *redisMap) SetTTL(ttl time.Duration) CacheMap{
+func (m *redisMap) SetTTL(ttl time.Duration) CacheMap {
 	m.ttl = ttl
+	return m
+}
+
+func (m *redisMap) SetMaxHashKeyLen(l int) *redisMap {
+	m.maxHashKeyLen = l
 	return m
 }
 

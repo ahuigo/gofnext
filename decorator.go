@@ -1,4 +1,4 @@
-package decorator
+package gofnext
 
 import (
 	"context"
@@ -7,15 +7,19 @@ import (
 	"reflect"
 	"sync"
 	"time"
+
+	"github.com/ahuigo/gofnext/dump"
 )
 
 type Config struct {
-	TTL  time.Duration
-	CacheMap CacheMap
+	TTL         time.Duration
+	CacheMap    CacheMap
+	NeedDumpKey bool
 }
 
 type cachedFn[Ctx any, K any, V any] struct {
 	mu          sync.RWMutex
+	needDumpKey bool
 	cacheMap    CacheMap
 	pkeyLockMap sync.Map
 	keyLen      int
@@ -136,6 +140,7 @@ func (c *cachedFn[Ctx, K, V]) setConfig(config *Config) *cachedFn[Ctx, K, V] {
 
 	// init value
 	c.cacheMap = config.CacheMap
+	c.needDumpKey = config.NeedDumpKey
 	if config.TTL > 0 {
 		c.cacheMap.SetTTL(config.TTL)
 	}
@@ -158,11 +163,17 @@ func (c *cachedFn[Ctx, K, V]) invoke2err(key1 Ctx, key2 K) (retv V, err error) {
 	if _, hasCtx := any(key1).(context.Context); hasCtx || c.keyLen <= 1 {
 		// ignore context key
 		kind := reflect.TypeOf(key2).Kind()
-		if kind == reflect.Map || kind == reflect.Slice || kind == reflect.Pointer {
+		if c.needDumpKey {
+			pkey = dump.Dump(key2)
+		} else if kind == reflect.Map || kind == reflect.Slice || kind == reflect.Pointer {
 			pkey = fmt.Sprintf("%#v", key2)
 		}
 	} else {
-		pkey = fmt.Sprintf("%#v,%#v", key1, key2)
+		if c.needDumpKey {
+			pkey = dump.Dump(key1) + "," + dump.Dump(key2)
+		} else {
+			pkey = fmt.Sprintf("%#v,%#v", key1, key2)
+		}
 	}
 
 	// 2. require lock for each pkey(go routine safe)

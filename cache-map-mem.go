@@ -1,4 +1,4 @@
-package decorator
+package gofnext
 
 import (
 	"sync"

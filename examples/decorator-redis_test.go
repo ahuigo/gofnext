@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	decorator "github.com/ahuigo/gocache-decorator"
+	"github.com/ahuigo/gofnext"
 )
 
 func TestRedisCacheFuncWithTTL(t *testing.T) {
@@ -16,9 +16,9 @@ func TestRedisCacheFuncWithTTL(t *testing.T) {
 	}
 
 	// Cacheable Function
-	getUserScoreFromDbWithCache := decorator.CacheFn1Err(getUserScore, &decorator.Config{
+	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
 		TTL:  time.Hour,
-		CacheMap: decorator.NewCacheRedis("redis-cache-key", nil).ClearAll(),
+		CacheMap: gofnext.NewCacheRedis("redis-cache-key", nil).ClearAll(),
 	})
 
 	// Parallel invocation of multiple functions.
@@ -43,10 +43,10 @@ func TestRedisCacheFuncWithNoTTL(t *testing.T) {
 	}
 
 	// Cacheable Function
-	getUserScoreFromDbWithCache := decorator.CacheFn1Err(
+	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(
 		getUserScore,
-		&decorator.Config{
-			CacheMap: decorator.NewCacheRedis("redis-cache-key", nil).ClearAll(),
+		&gofnext.Config{
+			CacheMap: gofnext.NewCacheRedis("redis-cache-key", nil).ClearAll(),
 		},
 	) // getFunc can only accept 1 parameter
 

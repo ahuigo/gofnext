@@ -1,4 +1,4 @@
-module github.com/ahuigo/gocache-decorator
+module github.com/ahuigo/gofnext
 
 go 1.21.1
 

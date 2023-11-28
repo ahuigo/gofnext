@@ -1,4 +1,4 @@
-package decorator
+package gofnext
 
 import (
 	"container/list"
@@ -41,7 +41,6 @@ func (m *cacheLru) Store(key, value any, err error) {
 		createdAt: time.Now(),
 		err:       err,
 	}
-	// fmt.Println(m.maxSize, m.list.Len(), key)
 	if m.maxSize > 0 && m.list.Len() >= m.maxSize {
 		elInter := m.list.Back()
 		m.list.Remove(elInter)

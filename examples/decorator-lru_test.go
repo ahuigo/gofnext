@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	decorator "github.com/ahuigo/gocache-decorator"
+	"github.com/ahuigo/gofnext"
 )
 
 func TestCacheFuncWithOneParamLRU(t *testing.T) {
@@ -18,9 +18,9 @@ func TestCacheFuncWithOneParamLRU(t *testing.T) {
 	}
 
 	// Cacheable Function
-	var getUserScoreFromDbWithLruCache = decorator.CacheFn1Err(getUserScore, &decorator.Config{
+	var getUserScoreFromDbWithLruCache = gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
 		TTL:  time.Hour,
-		CacheMap: decorator.NewCacheLru(2),
+		CacheMap: gofnext.NewCacheLru(2),
 	})
 
 	// Parallel invocation of multiple functions.

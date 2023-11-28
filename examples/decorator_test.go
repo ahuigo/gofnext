@@ -7,30 +7,24 @@ import (
 	"testing"
 	"time"
 
-	decorator "github.com/ahuigo/gocache-decorator"
+	"github.com/ahuigo/gofnext"
 )
 
-type UserInfo struct {
-	Name string
-	Age  int
-}
-
-func getUserAnonymouse() (UserInfo, error) {
-	fmt.Println("select * from db limit 1", time.Now())
+func getUser(age int) (UserInfo) {
 	time.Sleep(10 * time.Millisecond)
-	return UserInfo{Name: "Anonymous", Age: 9}, errors.New("db error")
+	return UserInfo{Name: "Alex", Age: age}
 }
-var (
-	// Cacheable Function
-	getUserInfoFromDbWithCache = decorator.CacheFn0Err(getUserAnonymouse, nil) 
-)
 
-func TestCacheFuncWithNoParam(t *testing.T) {
+var (
+	// Cacheable Function with 1 param and no error
+	getUserInfoFromDb= gofnext.CacheFn1(getUser, nil) 
+)
+func TestCacheFuncWith0Param(t *testing.T) {
 	// Parallel invocation of multiple functions.
 	times := 10
 	parallelCall(func() {
-		userinfo, err := getUserInfoFromDbWithCache()
-		fmt.Println(userinfo, err)
+		userinfo := getUserInfoFromDb(20)
+		fmt.Println(userinfo)
 	}, times)
 }
 
@@ -46,7 +40,7 @@ func TestCacheFuncWith2Param(t *testing.T) {
 	}
 
 	// Cacheable Function
-	getUserScoreFromDbWithCache := decorator.CacheFn2Err(getUserScore, &decorator.Config{
+	getUserScoreFromDbWithCache := gofnext.CacheFn2Err(getUserScore, &gofnext.Config{
 		TTL: time.Hour,
 	}) // getFunc can only accept 2 parameter
 
