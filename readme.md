@@ -3,7 +3,7 @@ Cache Decorator for Go functions, similar to Python's `functools.cache` and `fun
 Additionally, it supports Redis caching and custom caching.
 
 ## Features
-- [x] Decorator for function cache
+- [x] Decorator cache for function
 - [x] Goroutine Safe
 - [x] Support memory CacheMap(default)
 - [x] Support memory-lru CacheMap
@@ -21,7 +21,7 @@ Additionally, it supports Redis caching and custom caching.
 | func f() (res,err)    | decorator.CacheFn0Err(f,nil) |
 | func f(a) (res,err)   | decorator.CacheFn1Err(f,nil)    |
 | func f(a,b) (res,err) | decorator.CacheFn2Err(f,nil)    |
-| func f() (res,err) | decorator.CacheFn1Err(f, &decorator.Config{TTL: time.Hour})  |
+| func f() (res,err) | decorator.CacheFn0Err(f, &decorator.Config{TTL: time.Hour})<br/>// memory cache with ttl  |
 | func f() (res) | decorator.CacheFn0(f, &decorator.Config{CacheMap: decorator.NewCacheLru(9999)})  <br/>// Maxsize of cache is 9999|
 | func f() (res) | decorator.CacheFn0(f, &decorator.Config{CacheMap: decorator.NewCacheRedis("cacheKey", nil)})  <br/>// Warning: redis's marshaling may result in data loss|
 
