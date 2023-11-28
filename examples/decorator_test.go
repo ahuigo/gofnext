@@ -20,10 +20,9 @@ func getUserAnonymouse() (UserInfo, error) {
 	time.Sleep(10 * time.Millisecond)
 	return UserInfo{Name: "Anonymous", Age: 9}, errors.New("db error")
 }
-
 var (
 	// Cacheable Function
-	getUserInfoFromDbWithCache = decorator.DecoratorFn0(getUserAnonymouse, nil) 
+	getUserInfoFromDbWithCache = decorator.CacheFn0Err(getUserAnonymouse, nil) 
 )
 
 func TestCacheFuncWithNoParam(t *testing.T) {
@@ -47,8 +46,8 @@ func TestCacheFuncWith2Param(t *testing.T) {
 	}
 
 	// Cacheable Function
-	getUserScoreFromDbWithCache := decorator.DecoratorFn2(getUserScore, &decorator.Config{
-		Timeout: time.Hour,
+	getUserScoreFromDbWithCache := decorator.CacheFn2Err(getUserScore, &decorator.Config{
+		TTL: time.Hour,
 	}) // getFunc can only accept 2 parameter
 
 	// Parallel invocation of multiple functions.

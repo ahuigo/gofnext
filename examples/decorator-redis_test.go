@@ -16,8 +16,8 @@ func TestRedisCacheFuncWithTTL(t *testing.T) {
 	}
 
 	// Cacheable Function
-	getUserScoreFromDbWithCache := decorator.DecoratorFn1(getUserScore, &decorator.Config{
-		Timeout:  time.Hour,
+	getUserScoreFromDbWithCache := decorator.CacheFn1Err(getUserScore, &decorator.Config{
+		TTL:  time.Hour,
 		CacheMap: decorator.NewCacheRedis("redis-cache-key", nil).ClearAll(),
 	})
 
@@ -43,7 +43,7 @@ func TestRedisCacheFuncWithNoTTL(t *testing.T) {
 	}
 
 	// Cacheable Function
-	getUserScoreFromDbWithCache := decorator.DecoratorFn1(
+	getUserScoreFromDbWithCache := decorator.CacheFn1Err(
 		getUserScore,
 		&decorator.Config{
 			CacheMap: decorator.NewCacheRedis("redis-cache-key", nil).ClearAll(),

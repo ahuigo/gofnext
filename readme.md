@@ -13,6 +13,42 @@ Additionally, it supports Redis caching and custom caching.
 # Examples
 > Refer to: [examples](https://github.com/ahuigo/gocache-decorator/blob/main/examples)
 
+| function        | decorator             |
+|-----------------|-----------------------|
+| func f() res    | decorator.CacheFn0(f,nil) |
+| func f(a) res   | decorator.CacheFn1(f,nil) |
+| func f(a,b) res | decorator.CacheFn2(f,nil) |
+| func f() (res,err)    | decorator.CacheFn0Err(f,nil) |
+| func f(a) (res,err)   | decorator.CacheFn1Err(f,nil)    |
+| func f(a,b) (res,err) | decorator.CacheFn2Err(f,nil)    |
+| func f() (res,err) | decorator.CacheFn1Err(f, &decorator.Config{TTL: time.Hour})  |
+| func f() (res) | decorator.CacheFn0(f, &decorator.Config{CacheMap: decorator.NewCacheLru(9999)})  <br/>// Maxsize of cache is 9999|
+| func f() (res) | decorator.CacheFn0(f, &decorator.Config{CacheMap: decorator.NewCacheRedis("cacheKey", nil)})  <br/>// Warning: redis's marshaling may result in data loss|
+
+## Cache fibonacii function
+Refer to: [decorator fib example](https://github.com/ahuigo/gocache-decorator/blob/main/examples/fib_test.go)
+
+    package main
+    import "fmt"
+    import "github.com/ahuigo/gocache-decorator"
+    func main() {
+        var fib func(int) int
+        var fibCached func(int) int
+        fib = func(x int) int {
+            fmt.Printf("call arg:%d\n", x)
+            if x <= 1 {
+                return x
+            } else {
+                return fibCached(x-1) + fibCached(x-2)
+            }
+        }
+
+        fibCached = decorator.CacheFn1(fib, nil)    
+
+        fmt.Println(fibCached(5))
+        fmt.Println(fibCached(6))
+    }
+
 ## CachedFunction with zero param
 Refer to: [decorator example](https://github.com/ahuigo/gocache-decorator/blob/main/examples/decorator_test.go)
 
@@ -28,7 +64,7 @@ Refer to: [decorator example](https://github.com/ahuigo/gocache-decorator/blob/m
 
     var (
         // Cacheable Function
-        getUserInfoFromDbWithCache = decorator.DecoratorFn0(getUserAnonymouse, nil) 
+        getUserInfoFromDbWithCache = decorator.CacheFn0Err(getUserAnonymouse, nil) 
     )
 
     func TestCacheFuncWithNoParam(t *testing.T) {
@@ -40,6 +76,28 @@ Refer to: [decorator example](https://github.com/ahuigo/gocache-decorator/blob/m
         }, times)
     }
 
+
+## CachedFunction with 1 param and no error
+Refer to: [decorator example](https://github.com/ahuigo/gocache-decorator/blob/main/examples/decorator-nil_test.go)
+
+    func getUserNoError(age int) (UserInfo) {
+    	time.Sleep(10 * time.Millisecond)
+    	return UserInfo{Name: "Alex", Age: age}
+    }
+    
+    var (
+    	// Cacheable Function with 1 param and no error
+    	getUserInfoFromDbNil= decorator.CacheFn1(getUserNoError, nil) 
+    )
+
+    func TestCacheFuncNil(t *testing.T) {
+    	// Parallel invocation of multiple functions.
+    	times := 10
+    	parallelCall(func() {
+    		userinfo := getUserInfoFromDbNil(20)
+    		fmt.Println(userinfo)
+    	}, times)
+    }
 
 ## CachedFunction with 2 param
 > Refer to: [decorator example](https://github.com/ahuigo/gocache-decorator/blob/main/examples/decorator_test.go)
@@ -55,8 +113,8 @@ Refer to: [decorator example](https://github.com/ahuigo/gocache-decorator/blob/m
         }
 
         // Cacheable Function
-        getUserScoreFromDbWithCache := decorator.DecoratorFn2(getUserScore, &decorator.Config{
-            Timeout: time.Hour,
+        getUserScoreFromDbWithCache := decorator.CacheFn2Err(getUserScore, &decorator.Config{
+            TTL: time.Hour,
         }) // getFunc can only accept 2 parameter
 
         // Parallel invocation of multiple functions.
@@ -83,8 +141,8 @@ Refer to: [decorator redis example](https://github.com/ahuigo/gocache-decorator/
 
     var (
         // Cacheable Function
-        getUserScoreFromDbWithCache = decorator.DecoratorFn1(getUserScore, &decorator.Config{
-            Timeout:  time.Hour,
+        getUserScoreFromDbWithCache = decorator.CacheFn1Err(getUserScore, &decorator.Config{
+            TTL:  time.Hour,
             CacheMap: decorator.NewCacheRedis("redis-cache-key", nil),
         }) 
     )
@@ -93,14 +151,14 @@ Refer to: [decorator redis example](https://github.com/ahuigo/gocache-decorator/
 
         // Parallel invocation of multiple functions.
         for i := 0; i < 10; i++ {
-            score, err := getUserScoreFromDbWithCache(1)
-            if err != nil || score != 99 {
+            score, _ := getUserScoreFromDbWithCache(1)
+            if score != 99 {
                 t.Errorf("score should be 99, but get %d", score)
             }
         }
 
     }
 
-> Warning: Since JSON marshaling cannot serialize private data, Redis will lose private data.
+> Warning: Since redis needs JSON marshaling, this may result in data loss.
 
 

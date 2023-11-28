@@ -14,8 +14,8 @@ func TestRedisCacheFuncWithTTL(t *testing.T) {
 	}
 
 	// Cacheable Function
-	getUserScoreFromDbWithCache := DecoratorFn1(getUserScore, &Config{
-		Timeout:  time.Hour,
+	getUserScoreFromDbWithCache := CacheFn1Err(getUserScore, &Config{
+		TTL:  time.Hour,
 		CacheMap: NewCacheRedis("gocachemap", nil).ClearAll(),
 	}) // getFunc can only accept 1 parameter
 
@@ -47,7 +47,7 @@ func TestRedisCacheFuncWithNoTTL(t *testing.T) {
 	}
 
 	// Cacheable Function
-	getUserScoreFromDbWithCache := DecoratorFn1(
+	getUserScoreFromDbWithCache := CacheFn1Err(
 		getUserScore,
 		&Config{
 			CacheMap: NewCacheRedis("gocachemap", nil).ClearAll(),

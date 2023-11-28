@@ -18,16 +18,15 @@ type cacheLru struct {
 	listMap *sync.Map
 	maxSize int
 	mu      sync.RWMutex
-	timeout time.Duration
+	ttl time.Duration
 }
 
-func NewCacheLru(size int, timeout time.Duration) *cacheLru {
-	if size <= 0 {
-		size = 100
+func NewCacheLru(maxSize int) *cacheLru {
+	if maxSize <= 0 {
+		maxSize = 100
 	}
 	return &cacheLru{
-		timeout: timeout,
-		maxSize: size,
+		maxSize: maxSize,
 		list:    list.New(),
 		listMap: &sync.Map{},
 	}
@@ -59,7 +58,7 @@ func (m *cacheLru) Load(key any) (value any, existed bool, err error) {
 	elInter, existed := m.listMap.Load(key)
 	if existed {
 		el := elInter.(*cachedNode)
-		if m.timeout > 0 && time.Since(el.createdAt) > m.timeout {
+		if m.ttl > 0 && time.Since(el.createdAt) > m.ttl {
 			m.listMap.Delete(key)
 			m.list.Remove(el.element)
 			existed = false
@@ -72,10 +71,11 @@ func (m *cacheLru) Load(key any) (value any, existed bool, err error) {
 	return
 }
 
-func (m *cacheLru) SetTTL(timeout time.Duration) {
-	m.timeout = timeout
+func (m *cacheLru) SetTTL(ttl time.Duration) CacheMap{
+	m.ttl = ttl
+	return m
 }
 
-func (m *cacheLru) IsMarshalNeeded() bool {
+func (m *cacheLru) NeedMarshal() bool {
 	return false
 }

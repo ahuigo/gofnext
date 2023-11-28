@@ -18,10 +18,10 @@ func TestCacheFuncWithOneParamLRU(t *testing.T) {
 	}
 
 	// Cacheable Function
-	var getUserScoreFromDbWithLruCache = decorator. DecoratorFn1(getUserScore, &decorator.Config{
-		Timeout:  time.Hour,
-		CacheMap: decorator.NewCacheLru(2, time.Second),
-	}) 
+	var getUserScoreFromDbWithLruCache = decorator.CacheFn1Err(getUserScore, &decorator.Config{
+		TTL:  time.Hour,
+		CacheMap: decorator.NewCacheLru(2),
+	})
 
 	// Parallel invocation of multiple functions.
 	for i := 0; i < 10; i++ {

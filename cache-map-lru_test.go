@@ -7,7 +7,7 @@ import (
 )
 
 func TestCacheLru_StoreAndLoad(t *testing.T) {
-	m := NewCacheLru(100, time.Second)
+	m := NewCacheLru(100).SetTTL(time.Second)
 
 	// Store a value
 	m.Store("key1", "value1", nil)
@@ -44,26 +44,27 @@ func TestCacheLru_StoreAndLoad(t *testing.T) {
 }
 
 func TestCacheLru_SetTTL(t *testing.T) {
-	m := NewCacheLru(100, time.Second)
+	m := NewCacheLru(100)
+	m.SetTTL(time.Second)
 
 	// Store a value
 	m.Store("key1", "value1", nil)
 
-	// Load the value before timeout
+	// Load the value before ttl
 	_, existed, _ := m.Load("key1")
 	if !existed {
 		t.Errorf("Expected key1 to exist")
 	}
 
-	// Set a shorter timeout
+	// Set a shorter ttl
 	m.SetTTL(time.Millisecond)
 
-	// Wait for the timeout to expire
+	// Wait for the ttl to expire
 	time.Sleep(time.Millisecond * 10)
 
-	// Load the value after timeout
+	// Load the value after ttl
 	_, existed, _ = m.Load("key1")
 	if existed {
-		t.Errorf("Expected key1 to not exist after timeout")
+		t.Errorf("Expected key1 to not exist after ttl")
 	}
 }

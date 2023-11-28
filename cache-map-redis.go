@@ -99,10 +99,11 @@ func (m *redisMap) Load(key any) (value any, existed bool, err error) {
 	return
 }
 
-func (m *redisMap) SetTTL(timeout time.Duration) {
-	m.ttl = timeout
+func (m *redisMap) SetTTL(ttl time.Duration) CacheMap{
+	m.ttl = ttl
+	return m
 }
 
-func (m *redisMap) IsMarshalNeeded() bool {
+func (m *redisMap) NeedMarshal() bool {
 	return true
 }
