@@ -158,7 +158,7 @@ func (c *cachedFn[Ctx, K, V]) invoke2err(key1 Ctx, key2 K) (retv V, err error) {
 	if _, hasCtx := any(key1).(context.Context); hasCtx || c.keyLen <= 1 {
 		// ignore context key
 		kind := reflect.TypeOf(key2).Kind()
-		if kind == reflect.Map || kind == reflect.Slice {
+		if kind == reflect.Map || kind == reflect.Slice || kind == reflect.Pointer {
 			pkey = fmt.Sprintf("%#v", key2)
 		}
 	} else {
