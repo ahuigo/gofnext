@@ -10,11 +10,12 @@ TOC
   - [Features](#features)
   - [Decorator examples](#decorator-examples)
     - [Cache fibonacii function](#cache-fibonacii-function)
-    - [CachedFunction with zero param](#cachedfunction-with-zero-param)
-    - [CachedFunction with 1 param and no error](#cachedfunction-with-1-param-and-no-error)
-    - [CachedFunction with 2 param](#cachedfunction-with-2-param)
-    - [CachedFunction with lru cache](#cachedfunction-with-lru-cache)
-    - [CachedFunction with redis cache](#cachedfunction-with-redis-cache)
+    - [Cache function with 0 param](#cache-function-with-0-param)
+    - [Cache function with 1 param](#cache-function-with-1-param)
+    - [Cache function with 2 params](#cache-function-with-2-params)
+    - [Cache function with lru cache](#cache-function-with-lru-cache)
+    - [Cache function with redis cache](#cache-function-with-redis-cache)
+    - [Compare Pointer address or value?](#compare-pointer-address-or-value)
   - [Object functions](#object-functions)
   - [Dump](#dump)
 
@@ -42,7 +43,6 @@ TOC
     - [x] Support customization of the CacheMap(manually)
 - [x] Dump (gofnext/dump)
 - [x] Object (gofnext/object)
-    - [x] `ConvertObjectByte2String(any)`: Convert Object bytes to string
 
 ## Decorator examples
 Refer to: [examples](https://github.com/ahuigo/gofnext/blob/main/examples)
@@ -72,7 +72,7 @@ Refer to: [decorator fib example](https://github.com/ahuigo/gofnext/blob/main/ex
         fmt.Println(fibCached(6))
     }
 
-### CachedFunction with zero param
+### Cache function with 0 param
 Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator_test.go)
 
     package examples
@@ -100,7 +100,7 @@ Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/exampl
     }
 
 
-### CachedFunction with 1 param and no error
+### Cache function with 1 param
 Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-nil_test.go)
 
     func getUserNoError(age int) (UserInfo) {
@@ -122,7 +122,7 @@ Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/exampl
     	}, times)
     }
 
-### CachedFunction with 2 param
+### Cache function with 2 params
 > Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator_test.go)
 
     func TestCacheFuncWith2Param(t *testing.T) {
@@ -156,10 +156,10 @@ Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/exampl
         }
     }
 
-### CachedFunction with lru cache
+### Cache function with lru cache
 Refer to: [decorator lru example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-lru_test.go)
 
-### CachedFunction with redis cache
+### Cache function with redis cache
 Refer to: [decorator redis example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-redis_test.go)
 
     var (
@@ -184,15 +184,34 @@ To avoid keys being too long, you can limit the length of Redis key:
 
     cacheMap := gofnext.NewCacheRedis("redis-cache-key").SetMaxHashKeyLen(256);
 
-Set redis config
+Set redis config:
 
-    conf:=redis.UniversalOptions{
-        Addrs: []string{"localhost:6379"},
-        DB:    0,
-    }
-    cacheMap := gofnext.NewCacheRedis("redis-cache-key").SetConfig(&config)
+	// method 1: by default: localhost:6379
+	cache := gofnext.NewCacheRedis("redis-cache-key") 
+
+	// method 2: set redis addr
+	cache.SetRedisAddr("192.168.1.1:6379")
+
+	// method 3: set redis options
+	cache.SetRedisOpts(&redis.Options{
+		Addr: "localhost:6379",
+	})
+
+	// method 4: set redis universal options
+	cache.SetRedisUniversalOpts(&redis.UniversalOptions{
+		Addrs: []string{"localhost:6379"},
+	})
 
 > Warning: Since redis needs JSON marshaling, this may result in data loss.
+
+### Compare Pointer address or value?
+By default, if key is pointer, decorator will compare the real value instead of pointer address.
+
+If you wanna compare pointer address, you should turn on `NeedCmpKeyPointerAddr`:
+
+	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
+		NeedCmpKeyPointerAddr: true,
+	})
 
 
 ## Object functions
