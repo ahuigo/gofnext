@@ -5,7 +5,28 @@ import (
 	"time"
 
 	"github.com/ahuigo/gofnext"
+	"github.com/go-redis/redis"
 )
+
+
+func TestRedisCacheClient(t *testing.T) {
+	// method 1: by default: localhost:6379
+	cache := gofnext.NewCacheRedis("redis-cache-key") 
+
+	// method 2: set redis addr
+	cache.SetRedisAddr("192.168.1.1:6379")
+
+	// method 3: set redis options
+	cache.SetRedisOpts(&redis.Options{
+		Addr: "localhost:6379",
+	})
+
+	// method 4: set redis universal options
+	cache.SetRedisUniversalOpts(&redis.UniversalOptions{
+		Addrs: []string{"localhost:6379"},
+	})
+	cache.SetMaxHashKeyLen(100)
+}
 
 func TestRedisCacheFuncWithTTL(t *testing.T) {
 	// Original function
@@ -18,7 +39,7 @@ func TestRedisCacheFuncWithTTL(t *testing.T) {
 	// Cacheable Function
 	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
 		TTL:  time.Hour,
-		CacheMap: gofnext.NewCacheRedis("redis-cache-key", nil).ClearAll(),
+		CacheMap: gofnext.NewCacheRedis("redis-cache-key").ClearAll(),
 	})
 
 	// Parallel invocation of multiple functions.
@@ -27,9 +48,15 @@ func TestRedisCacheFuncWithTTL(t *testing.T) {
 		if err != nil || score != 99 {
 			t.Errorf("score should be 99, but get %d", score)
 		}
+		score, _ = getUserScoreFromDbWithCache(2)
+		if score != 100 {
+			t.Fatalf("score should be 100, but get %d", score)
+		}
+		getUserScoreFromDbWithCache(3)
+		getUserScoreFromDbWithCache(3)
 	}
 
-	if executeCount != 1 {
+	if executeCount != 3 {
 		t.Errorf("executeCount should be 1, but get %d", executeCount)
 	}
 }
@@ -46,7 +73,7 @@ func TestRedisCacheFuncWithNoTTL(t *testing.T) {
 	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(
 		getUserScore,
 		&gofnext.Config{
-			CacheMap: gofnext.NewCacheRedis("redis-cache-key", nil).ClearAll(),
+			CacheMap: gofnext.NewCacheRedis("redis-cache-key").ClearAll(),
 		},
 	) // getFunc can only accept 1 parameter
 

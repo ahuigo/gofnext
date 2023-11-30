@@ -10,10 +10,6 @@ import (
 	"github.com/ahuigo/gofnext/dump"
 )
 
-var (
-	testCacheMap sync.Map
-)
-
 type Config struct {
 	TTL         time.Duration
 	CacheMap    CacheMap

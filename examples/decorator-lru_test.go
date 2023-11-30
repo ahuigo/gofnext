@@ -12,6 +12,7 @@ import (
 func TestCacheFuncWithOneParamLRU(t *testing.T) {
 	// Original function
 	executeCount := 0
+	maxCacheSize := 2
 	var getUserScore = func(more int) (int, error) {
 		executeCount++
 		return 98 + more, errors.New("db error")
@@ -20,7 +21,7 @@ func TestCacheFuncWithOneParamLRU(t *testing.T) {
 	// Cacheable Function
 	var getUserScoreFromDbWithLruCache = gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
 		TTL:  time.Hour,
-		CacheMap: gofnext.NewCacheLru(2),
+		CacheMap: gofnext.NewCacheLru(maxCacheSize),
 	})
 
 	// Parallel invocation of multiple functions.

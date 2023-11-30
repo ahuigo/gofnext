@@ -180,7 +180,18 @@ Refer to: [decorator redis example](https://github.com/ahuigo/gofnext/blob/main/
         }
     }
 
-You could
+To avoid keys being too long, you can limit the length of Redis key:
+
+    cacheMap := gofnext.NewCacheRedis("redis-cache-key").SetMaxHashKeyLen(256);
+
+Set redis config
+
+    conf:=redis.UniversalOptions{
+        Addrs: []string{"localhost:6379"},
+        DB:    0,
+    }
+    cacheMap := gofnext.NewCacheRedis("redis-cache-key").SetConfig(&config)
+
 > Warning: Since redis needs JSON marshaling, this may result in data loss.
 
 
@@ -209,10 +220,10 @@ Dump any value to string(include private field)
 
     type Person struct {
         Name string
-        age  int //private
+        age  &int //private
     }
 	p := &person
-	expectedP := "&Person:{Name:\"John Doe\",age:30}"
+	expectedP := "&Person{Name:\"John Doe\",age:&30}"
 	if result := dump.String(p); result != expectedP {
 		t.Errorf("Expected %s, but got %s", expectedP, result)
 	}

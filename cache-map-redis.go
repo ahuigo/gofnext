@@ -29,23 +29,40 @@ type redisData struct {
 	TTL       time.Duration
 }
 
-func NewCacheRedis(mapKey string, config *redis.UniversalOptions) *redisMap {
+func NewCacheRedis(mapKey string) *redisMap {
 	if mapKey == "" {
 		panic("mapKey can not be empty")
 	}
-	if config == nil {
-		redisAddr := "redis:6379"
-		config = &redis.UniversalOptions{
-			Addrs: []string{redisAddr},
-			DB:    0,
-		}
+	redisAddr := "localhost:6379"
+	config := &redis.UniversalOptions{
+		Addrs: []string{redisAddr},
+		DB:    0,
 	}
 	redisClient := redis.NewUniversalClient(config)
 	return &redisMap{
-		redisClient:   redisClient,
-		redisPreKey:   mapKey,
+		redisClient: redisClient,
+		redisPreKey: mapKey,
 	}
 }
+
+func (m *redisMap) SetRedisAddr(addr string) *redisMap {
+	m.redisClient = redis.NewClient(&redis.Options{
+		Addr: addr,
+	})
+	return m
+}
+
+func (m *redisMap) SetRedisOpts(opts *redis.Options) *redisMap {
+	m.redisClient = redis.NewClient(opts)
+	return m
+}
+
+func (m *redisMap) SetRedisUniversalOpts(opts *redis.UniversalOptions) *redisMap {
+	m.redisClient = redis.NewUniversalClient(opts)
+	return m
+}
+
+
 
 func (m *redisMap) ClearAll() *redisMap {
 	m.redisClient.Del(m.redisPreKey)
@@ -64,10 +81,10 @@ func (m *redisMap) strkey(key any) string {
 		if m.maxHashKeyLen <= 32 {
 			hash := md5.Sum([]byte(r))
 			r = hex.EncodeToString(hash[:])
-		}else if m.maxHashKeyLen <= 64 {
+		} else if m.maxHashKeyLen <= 64 {
 			hash := sha512.Sum512_256([]byte(r))
 			r = hex.EncodeToString(hash[:])
-		}else{
+		} else {
 			hash := sha512.Sum512([]byte(r))
 			r = hex.EncodeToString(hash[:])
 		}
