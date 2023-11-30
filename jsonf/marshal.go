@@ -1,6 +1,7 @@
 package jsonf
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 	"slices"
@@ -14,86 +15,97 @@ func Marshal(v interface{}) ([]byte, error) {
 }
 
 func marshalValue(refV reflect.Value) ([]byte, error) {
+	var buf bytes.Buffer
+
+	err := marshalValueToBuffer(refV, &buf)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+func marshalValueToBuffer(refV reflect.Value, buf *bytes.Buffer) error {
 	switch refV.Kind() {
 	case reflect.Invalid:
-		return nil, nil
+		return nil
 	case reflect.String:
-		return []byte(`"` + refV.String() + `"`), nil
+		buf.WriteString(`"`)
+		buf.WriteString(refV.String())
+		buf.WriteString(`"`)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return []byte(fmt.Sprintf("%d", refV.Int())), nil
-	// refV.CanInt()
+		buf.WriteString(fmt.Sprintf("%d", refV.Int()))
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		return []byte(fmt.Sprintf("%d", refV.Uint())), nil
+		buf.WriteString(fmt.Sprintf("%d", refV.Uint()))
 	case reflect.Float32, reflect.Float64:
-		return []byte(fmt.Sprintf("%f", refV.Float())), nil
+		buf.WriteString(fmt.Sprintf("%f", refV.Float()))
 	case reflect.Complex64, reflect.Complex128:
-		return []byte(fmt.Sprintf("%f", refV.Complex())), nil
+		buf.WriteString(fmt.Sprintf("%f", refV.Complex()))
 	case reflect.Ptr, reflect.Interface:
 		if refV.IsNil() {
-			return []byte("null"), nil
-		}
-		refV = refV.Elem()
-		marshalVal, err := marshalValue(refV)
-		if err != nil {
-			return nil, err
-		}
-		return marshalVal,nil
-		// return []byte(fmt.Sprintf("&%s:%s", refV.Type().Name(), marshalVal)), nil
-	case reflect.Slice, reflect.Array:
-		ret := "["
-		for i := 0; i < refV.Len(); i++ {
-			marshalVal, err := marshalValue(refV.Index(i))
+			buf.WriteString("null")
+		} else {
+			refV = refV.Elem()
+			err := marshalValueToBuffer(refV, buf)
 			if err != nil {
-				return nil, err
-			}
-			ret += string(marshalVal)
-			if i != refV.Len()-1 {
-				ret += ","
+				return err
 			}
 		}
-		ret += "]"
-		return []byte(ret), nil
+	case reflect.Slice, reflect.Array:
+		buf.WriteString("[")
+		for i := 0; i < refV.Len(); i++ {
+			err := marshalValueToBuffer(refV.Index(i), buf)
+			if err != nil {
+				return err
+			}
+			if i != refV.Len()-1 {
+				buf.WriteString(",")
+			}
+		}
+		buf.WriteString("]")
 	case reflect.Struct:
-		ret := "{"
+		buf.WriteString("{")
 		for i := 0; i < refV.NumField(); i++ {
 			fieldType := refV.Type().Field(i)
-			marshalVal, err := marshalValue(refV.Field(i))
-			if err != nil {
-				return nil, err
-			}
-			// parse json tag 
 			fieldName := fieldType.Tag.Get("json")
 			if fieldName == "" {
 				fieldName = fieldType.Name
 			}
-			ret += fmt.Sprintf("%#v:%s", fieldName, string(marshalVal))
+			buf.WriteString(fmt.Sprintf("%#v:", fieldName))
+			err := marshalValueToBuffer(refV.Field(i), buf)
+			if err != nil {
+				return err
+			}
 			if i != refV.NumField()-1 {
-				ret += ","
+				buf.WriteString(",")
 			}
 		}
-		ret += "}"
-		return []byte(ret), nil
+		buf.WriteString("}")
 	case reflect.Map:
-		sli := make([]string, len(refV.MapKeys()))
-		for i, key := range refV.MapKeys() {
-			keyMarshalVal, err := marshalValue(key)
+		keys := refV.MapKeys()
+		sli := make([]string, len(keys))
+		for i, key := range keys {
+			keyBuf := new(bytes.Buffer)
+			err := marshalValueToBuffer(key, keyBuf)
 			if err != nil {
-				return nil, err
+				return err
 			}
-			valMarshalVal, err := marshalValue(refV.MapIndex(key))
+			valBuf := new(bytes.Buffer)
+			err = marshalValueToBuffer(refV.MapIndex(key), valBuf)
 			if err != nil {
-				return nil, err
+				return err
 			}
-			sli[i] = string(keyMarshalVal) + ":" + string(valMarshalVal)
+			sli[i] = keyBuf.String() + ":" + valBuf.String()
 		}
 		slices.Sort(sli)
-		ret := "{" + strings.Join(sli, ",") + "}"
-		return []byte(ret), nil
-	case reflect.Func:
-		return nil, nil
-	case reflect.Chan:
-		return nil, nil
+		buf.WriteString("{")
+		buf.WriteString(strings.Join(sli, ","))
+		buf.WriteString("}")
+	case reflect.Func, reflect.Chan:
+		// do nothing
 	default:
-		return nil, nil
+		return nil
 	}
+
+	return nil
 }

@@ -1,70 +1,90 @@
 package dump
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 	"slices"
 	"strings"
 )
 
-func Dump(val any) string {
+// Dump any value to string(include private field)
+func String(val any) string {
+	refV := reflect.ValueOf(val)
+	return string(dump(refV))
+}
+
+// Dump any value to bytes(include private field)
+func Bytes(val any) []byte{
 	refV := reflect.ValueOf(val)
 	return dump(refV)
 }
-func dump(refV reflect.Value) string {
+
+func dump(refV reflect.Value) []byte {
+	var buf bytes.Buffer
+
 	switch refV.Kind() {
 	case reflect.Invalid:
-		return "<invalid>"
+		buf.WriteString("<invalid>")
 	case reflect.String:
-		return `"` + refV.String() + `"`
+		buf.WriteString(`"`)
+		buf.WriteString(refV.String())
+		buf.WriteString(`"`)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return fmt.Sprintf("%d", refV.Int())
+		buf.WriteString(fmt.Sprintf("%d", refV.Int()))
 	// refV.CanInt()
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		return fmt.Sprintf("%d", refV.Uint())
+		buf.WriteString(fmt.Sprintf("%d", refV.Uint()))
 	case reflect.Float32, reflect.Float64:
-		return fmt.Sprintf("%f", refV.Float())
+		buf.WriteString(fmt.Sprintf("%f", refV.Float()))
 	case reflect.Complex64, reflect.Complex128:
-		return fmt.Sprintf("%f", refV.Complex())
+		buf.WriteString(fmt.Sprintf("%f", refV.Complex()))
 	case reflect.Ptr, reflect.Interface:
 		if refV.IsNil() {
-			return "<nil>"
+			buf.WriteString("null")
+		} else {
+			refV = refV.Elem()
+			buf.WriteString(fmt.Sprintf("&%s", dump(refV)))
 		}
-		refV = refV.Elem()
-		return fmt.Sprintf("&%s:%s", refV.Type().Name(), dump(refV))
 	case reflect.Slice, reflect.Array:
-		ret := "["
+		buf.WriteString("[")
 		for i := 0; i < refV.Len(); i++ {
-			ret += dump(refV.Index(i))
+			buf.Write(dump(refV.Index(i)))
 			if i != refV.Len()-1 {
-				ret += ","
+				buf.WriteString(",")
 			}
 		}
-		ret += "]"
-		return ret
+		buf.WriteString("]")
 	case reflect.Struct:
-		ret := "{"
+		name := refV.Type().Name()
+		buf.WriteString(name+"{")
 		for i := 0; i < refV.NumField(); i++ {
-			ret += refV.Type().Field(i).Name + ":" + dump(refV.Field(i))
+			buf.WriteString(refV.Type().Field(i).Name)
+			buf.WriteString(":")
+			buf.Write(dump(refV.Field(i)))
 			if i != refV.NumField()-1 {
-				ret += ","
+				buf.WriteString(",")
 			}
 		}
-		ret += "}"
-		return ret
+		buf.WriteString("}")
 	case reflect.Map:
 		sli := make([]string, len(refV.MapKeys()))
 		for i, key := range refV.MapKeys() {
-			sli[i] = dump(key) + ":" + dump(refV.MapIndex(key))
+			keyVal := append(dump(key), ':')
+			valbytes := dump(refV.MapIndex(key))
+			sli[i] = string(append(keyVal, valbytes...))
 		}
 		slices.Sort(sli)
-		ret := "{" + strings.Join(sli, ",") + "}"
-		return ret
+		buf.WriteString("{")
+		buf.WriteString(strings.Join(sli, ","))
+		buf.WriteString("}")
 	case reflect.Func:
-		return "<func>"
+		buf.WriteString("<func>")
 	case reflect.Chan:
-		return "<chan>"
+		buf.WriteString("<chan>")
 	default:
 		panic("not supported")
 	}
+
+	return buf.Bytes()
 }

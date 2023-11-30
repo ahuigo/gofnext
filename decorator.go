@@ -191,7 +191,7 @@ func (c *cachedFn[Ctx, K, V]) invoke2err(key1 Ctx, key2 K) (retv V, err error) {
 		pkey = 0
 	}
 	if c.needDumpKey {
-		pkey = dump.Dump(pkey)
+		pkey = dump.String(pkey)
 	}
 
 	// 2. require lock for each pkey(go routine safe)

@@ -205,8 +205,14 @@ Refer to: [object example](https://github.com/ahuigo/gofnext/blob/main/examples/
 ## Dump 
 Refer to: [dump example](https://github.com/ahuigo/gofnext/blob/main/examples/dump_test.go)
 
+Dump any value to string(include private field)
+
+    type Person struct {
+        Name string
+        age  int //private
+    }
 	p := &person
 	expectedP := "&Person:{Name:\"John Doe\",age:30}"
-	if result := dump.Dump(p); result != expectedP {
+	if result := dump.String(p); result != expectedP {
 		t.Errorf("Expected %s, but got %s", expectedP, result)
 	}
