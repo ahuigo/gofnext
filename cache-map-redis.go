@@ -75,7 +75,7 @@ func (m *redisMap) strkey(key any) string {
 	case string:
 		r = rt
 	default:
-		r = dump.String(key)
+		r = dump.String(key, false)
 	}
 	if m.maxHashKeyLen > 0 && len(r) > m.maxHashKeyLen {
 		if m.maxHashKeyLen <= 32 {

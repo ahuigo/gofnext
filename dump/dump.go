@@ -8,19 +8,34 @@ import (
 	"strings"
 )
 
+type PtrSeen map[uintptr]struct{}
+
+func (ps PtrSeen) Add(rv reflect.Value) bool{
+	ptr := rv.Pointer()
+	if _, ok := ps[ptr]; ok {
+		// e := fmt.Sprintf("encountered a cycle via %s", rv.Type())
+		// panic(e)
+		return false
+	}
+	ps[ptr] = struct{}{}
+	return true
+}
+
 // Dump any value to string(include private field)
-func String(val any) string {
+func String(val any, cmpPtrAddr bool) string {
 	refV := reflect.ValueOf(val)
-	return string(dump(refV))
+	ps:=PtrSeen{}
+	return string(dump(refV, cmpPtrAddr, ps))
 }
 
 // Dump any value to bytes(include private field)
-func Bytes(val any) []byte{
+func Bytes(val any, cmpPtrAddr bool) []byte {
 	refV := reflect.ValueOf(val)
-	return dump(refV)
+	ps:=PtrSeen{}
+	return dump(refV, cmpPtrAddr,ps)
 }
 
-func dump(refV reflect.Value) []byte {
+func dump(refV reflect.Value, cmpPtrAddr bool, ps PtrSeen) []byte {
 	var buf bytes.Buffer
 
 	switch refV.Kind() {
@@ -43,13 +58,22 @@ func dump(refV reflect.Value) []byte {
 		if refV.IsNil() {
 			buf.WriteString("null")
 		} else {
-			refV = refV.Elem()
-			buf.WriteString(fmt.Sprintf("&%s", dump(refV)))
+			isPtr := refV.Kind() == reflect.Ptr
+			if isPtr && !ps.Add(refV) {
+				buf.WriteString("<cycle pointer>")
+				break
+			}
+			if cmpPtrAddr && isPtr {
+				buf.WriteString(fmt.Sprintf("*0x%x", refV.Pointer()))
+			}else{
+				refV = refV.Elem()
+				buf.WriteString(fmt.Sprintf("&%s", dump(refV, cmpPtrAddr, ps)))
+			}
 		}
 	case reflect.Slice, reflect.Array:
 		buf.WriteString("[")
 		for i := 0; i < refV.Len(); i++ {
-			buf.Write(dump(refV.Index(i)))
+			buf.Write(dump(refV.Index(i), cmpPtrAddr, ps))
 			if i != refV.Len()-1 {
 				buf.WriteString(",")
 			}
@@ -57,11 +81,11 @@ func dump(refV reflect.Value) []byte {
 		buf.WriteString("]")
 	case reflect.Struct:
 		name := refV.Type().Name()
-		buf.WriteString(name+"{")
+		buf.WriteString(name + "{")
 		for i := 0; i < refV.NumField(); i++ {
 			buf.WriteString(refV.Type().Field(i).Name)
 			buf.WriteString(":")
-			buf.Write(dump(refV.Field(i)))
+			buf.Write(dump(refV.Field(i), cmpPtrAddr, ps))
 			if i != refV.NumField()-1 {
 				buf.WriteString(",")
 			}
@@ -70,8 +94,8 @@ func dump(refV reflect.Value) []byte {
 	case reflect.Map:
 		sli := make([]string, len(refV.MapKeys()))
 		for i, key := range refV.MapKeys() {
-			keyVal := append(dump(key), ':')
-			valbytes := dump(refV.MapIndex(key))
+			keyVal := append(dump(key, cmpPtrAddr, ps), ':')
+			valbytes := dump(refV.MapIndex(key), cmpPtrAddr, ps)
 			sli[i] = string(append(keyVal, valbytes...))
 		}
 		slices.Sort(sli)

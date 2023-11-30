@@ -11,17 +11,38 @@ import (
 )
 
 type Config struct {
-	TTL         time.Duration
-	CacheMap    CacheMap
-	NeedDumpKey bool
+	TTL                   time.Duration
+	CacheMap              CacheMap
+	NeedDumpKey           bool
+	NeedCmpKeyPointerAddr bool
 }
 
 type cachedFn[K1 any, K2 any, V any] struct {
-	needDumpKey bool
-	cacheMap    CacheMap
-	pkeyLockMap sync.Map
-	keyLen      int
-	getFunc     func(K1, K2) (V, error)
+	needDumpKey           bool
+	needCmpKeyPointerAddr bool
+	cacheMap              CacheMap
+	pkeyLockMap           sync.Map
+	keyLen                int
+	getFunc               func(K1, K2) (V, error)
+}
+
+func (c *cachedFn[K1, K2, V]) setConfig(config *Config) *cachedFn[K1, K2, V] {
+	// default value
+	if config == nil {
+		config = &Config{}
+	}
+	if config.CacheMap == nil {
+		config.CacheMap = newCacheMapMem(config.TTL)
+	}
+
+	// init value
+	c.cacheMap = config.CacheMap
+	c.needCmpKeyPointerAddr = config.NeedCmpKeyPointerAddr
+	c.needDumpKey = config.NeedDumpKey
+	if config.TTL > 0 {
+		c.cacheMap.SetTTL(config.TTL)
+	}
+	return c
 }
 
 // Cache Function with 2 parameter
@@ -124,37 +145,23 @@ func (c *cachedFn[Ctx, K, V]) invoke1err(key K) V {
 	return val
 }
 
-func (c *cachedFn[K1, K2, V]) setConfig(config *Config) *cachedFn[K1, K2, V] {
-	// default value
-	if config == nil {
-		config = &Config{}
-	}
-	if config.CacheMap == nil {
-		config.CacheMap = newCacheMapMem(config.TTL)
-	}
-
-	// init value
-	c.cacheMap = config.CacheMap
-	c.needDumpKey = config.NeedDumpKey
-	if config.TTL > 0 {
-		c.cacheMap.SetTTL(config.TTL)
-	}
-	return c
-}
-
 func (c *cachedFn[K1, K2, V]) invoke2(key1 K1, key2 K2) (retv V) {
 	retv, _ = c.invoke2err(key1, key2)
 	return retv
 }
 
 var _isHashKey map[any]int
-func isHashableKey(key any) (canHash bool) {
+
+func isHashableKey(key any, cmpPtr bool) (canHash bool) {
 	defer func() {
 		if err := recover(); err != nil {
 			canHash = false
 		}
 	}()
 	_ = _isHashKey[key]
+	if cmpPtr {
+		return true
+	}
 	return reflect.ValueOf(key).Kind() != reflect.Pointer
 }
 
@@ -162,16 +169,17 @@ func isHashableKey(key any) (canHash bool) {
 func (c *cachedFn[Ctx, K, V]) invoke2err(key1 Ctx, key2 K) (retv V, err error) {
 	// 1. generate pkey
 	var pkey any
+	cmpPtr := c.needCmpKeyPointerAddr
 	if c.keyLen == 2 {
 		if _, hasCtx := any(key1).(context.Context); hasCtx {
 			pkey = key2
 			if !c.needDumpKey {
-				c.needDumpKey = !isHashableKey(key2)
+				c.needDumpKey = !isHashableKey(key2, cmpPtr)
 			}
 		} else {
 			pkey = [2]any{key1, key2}
 			if !c.needDumpKey {
-				c.needDumpKey = !isHashableKey(key1) || !isHashableKey(key2)
+				c.needDumpKey = !isHashableKey(key1, cmpPtr) || !isHashableKey(key2, cmpPtr)
 			}
 		}
 	} else if c.keyLen == 1 {
@@ -180,14 +188,14 @@ func (c *cachedFn[Ctx, K, V]) invoke2err(key1 Ctx, key2 K) (retv V, err error) {
 		} else {
 			pkey = key2
 			if !c.needDumpKey {
-				c.needDumpKey = !isHashableKey(key2)
+				c.needDumpKey = !isHashableKey(key2, cmpPtr)
 			}
 		}
 	} else {
 		pkey = 0
 	}
 	if c.needDumpKey {
-		pkey = dump.String(pkey)
+		pkey = dump.String(pkey, c.needCmpKeyPointerAddr)
 	}
 
 	// 2. require lock for each pkey(go routine safe)
