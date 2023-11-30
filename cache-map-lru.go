@@ -51,8 +51,8 @@ func (m *cacheLru) Store(key, value any, err error) {
 }
 
 func (m *cacheLru) Load(key any) (value any, existed bool, err error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+	m.mu.Lock()
+	defer m.mu.Unlock()
 
 	elInter, existed := m.listMap.Load(key)
 	if existed {
