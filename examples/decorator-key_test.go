@@ -73,6 +73,39 @@ func TestCacheFuncKeyMap(t *testing.T) {
 		t.Errorf("executeCount should be 3, but get %d", executeCount)
 	}
 }
+
+func TestCacheFuncKeyDeepMap(t *testing.T) {
+	// Original function
+	type Params struct {
+		m map[string]int
+	}
+	executeCount := 0
+	getUserScore := func(params Params) (int, error) {
+		executeCount++
+		fmt.Println("select score from db where id=", params.m["id"], time.Now())
+		time.Sleep(10 * time.Millisecond)
+		return 98 + params.m["id"], nil
+	}
+
+	// Cacheable Function
+	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
+		TTL: time.Hour,
+	})
+
+	// Parallel invocation of multiple functions.
+	parallelCall(func() {
+		score, _ := getUserScoreFromDbWithCache(Params{m: map[string]int{"id": 1}})
+		if score != 99 {
+			t.Errorf("score should be 99, but get %d", score)
+		}
+		getUserScoreFromDbWithCache(Params{m: map[string]int{"id": 2}})
+		getUserScoreFromDbWithCache(Params{m: map[string]int{"id": 3}})
+	}, 10)
+
+	if executeCount != 3 {
+		t.Errorf("executeCount should be 3, but get %d", executeCount)
+	}
+}
 func TestCacheFuncKeySlice(t *testing.T) {
 	type UserInfo struct {
 		Name string

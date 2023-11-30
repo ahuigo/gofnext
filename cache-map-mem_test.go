@@ -89,7 +89,7 @@ func TestCacheFuncWith2Param(t *testing.T) {
 
 }
 
-func TestCacheFuncWithNilContext(t *testing.T) {
+func TestCacheFunc2WithErr(t *testing.T) {
 	getUserScore := func(c context.Context, arg map[int]int) (int, error) {
 		return 98, errors.New("db error")
 	}

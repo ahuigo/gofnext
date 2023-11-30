@@ -12,7 +12,7 @@ pkg: gitcheck test
 	v=`cat version` && git tag "$$v" && git push origin "$$v" && git push origin HEAD
 
 test:
-	go test -coverprofile coverage.out -failfast -v ./...
+	go test -coverprofile coverage.out -failfast ./...
 
 cover:
 	go tool cover -html=coverage.out

@@ -30,7 +30,7 @@ func marshalValue(refV reflect.Value) ([]byte, error) {
 		return []byte(fmt.Sprintf("%f", refV.Complex())), nil
 	case reflect.Ptr, reflect.Interface:
 		if refV.IsNil() {
-			return []byte("<nil>"), nil
+			return []byte("null"), nil
 		}
 		refV = refV.Elem()
 		marshalVal, err := marshalValue(refV)

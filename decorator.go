@@ -3,12 +3,15 @@ package gofnext
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"reflect"
 	"sync"
 	"time"
 
 	"github.com/ahuigo/gofnext/dump"
+)
+
+var (
+	testCacheMap sync.Map
 )
 
 type Config struct {
@@ -17,62 +20,35 @@ type Config struct {
 	NeedDumpKey bool
 }
 
-type cachedFn[Ctx any, K any, V any] struct {
-	mu          sync.RWMutex
+type cachedFn[K1 any, K2 any, V any] struct {
 	needDumpKey bool
 	cacheMap    CacheMap
 	pkeyLockMap sync.Map
 	keyLen      int
-	getFunc     func(Ctx, K) (V, error)
+	getFunc     func(K1, K2) (V, error)
 }
 
-// Cache Function with ctx and 1 parameter
-func CacheFn2Err[Ctx any, K any, V any](
-	getFunc func(Ctx, K) (V, error),
+// Cache Function with 2 parameter
+func CacheFn2Err[K1 any, K2 any, V any](
+	getFunc func(K1, K2) (V, error),
 	config *Config,
-) func(Ctx, K) (V, error) {
-	ins := &cachedFn[Ctx, K, V]{getFunc: getFunc, keyLen: 2}
+) func(K1, K2) (V, error) {
+	ins := &cachedFn[K1, K2, V]{getFunc: getFunc, keyLen: 2}
 	ins.setConfig(config)
 	return ins.invoke2err
 }
 
-// Cache Function with ctx and 1 parameter
-func CacheFn2[Ctx any, K any, V any](
-	getFunc func(Ctx, K) V,
+// Cache Function with 2 parameter
+func CacheFn2[K1 any, K2 any, V any](
+	getFunc func(K1, K2) V,
 	config *Config,
-) func(Ctx, K) V {
-	getFunc0 := func(ctx Ctx, key K) (V, error) {
+) func(K1, K2) V {
+	getFunc0 := func(ctx K1, key K2) (V, error) {
 		return getFunc(ctx, key), nil
 	}
-	ins := &cachedFn[Ctx, K, V]{getFunc: getFunc0, keyLen: 2}
+	ins := &cachedFn[K1, K2, V]{getFunc: getFunc0, keyLen: 2}
 	ins.setConfig(config)
 	return ins.invoke2
-}
-
-// Cache Function with no parameter
-func CacheFn0Err[V any](
-	getFunc func() (V, error),
-	config *Config,
-) func() (V, error) {
-	getFunc0 := func(ctx context.Context, i int8) (V, error) {
-		return getFunc()
-	}
-	ins := &cachedFn[context.Context, int8, V]{getFunc: getFunc0, keyLen: 0}
-	ins.setConfig(config)
-	return ins.invoke0err
-}
-
-// Cache Function with no parameter
-func CacheFn0[V any](
-	getFunc func() V,
-	config *Config,
-) func() V {
-	getFunc0 := func(ctx context.Context, i int8) (V, error) {
-		return getFunc(), nil
-	}
-	ins := &cachedFn[context.Context, int8, V]{getFunc: getFunc0, keyLen: 0}
-	ins.setConfig(config)
-	return ins.invoke0
 }
 
 // Cache Function with 1 parameter
@@ -98,6 +74,32 @@ func CacheFn1[K any, V any](
 	ins := &cachedFn[context.Context, K, V]{getFunc: getFunc0, keyLen: 1}
 	ins.setConfig(config)
 	return ins.invoke1err
+}
+
+// Cache Function with 0 parameter
+func CacheFn0Err[V any](
+	getFunc func() (V, error),
+	config *Config,
+) func() (V, error) {
+	getFunc0 := func(ctx context.Context, i int8) (V, error) {
+		return getFunc()
+	}
+	ins := &cachedFn[context.Context, int8, V]{getFunc: getFunc0, keyLen: 0}
+	ins.setConfig(config)
+	return ins.invoke0err
+}
+
+// Cache Function with 0 parameter
+func CacheFn0[V any](
+	getFunc func() V,
+	config *Config,
+) func() V {
+	getFunc0 := func(ctx context.Context, i int8) (V, error) {
+		return getFunc(), nil
+	}
+	ins := &cachedFn[context.Context, int8, V]{getFunc: getFunc0, keyLen: 0}
+	ins.setConfig(config)
+	return ins.invoke0
 }
 
 // Invoke cached function with no parameter
@@ -126,10 +128,7 @@ func (c *cachedFn[Ctx, K, V]) invoke1err(key K) V {
 	return val
 }
 
-func (c *cachedFn[Ctx, K, V]) setConfig(config *Config) *cachedFn[Ctx, K, V] {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
+func (c *cachedFn[K1, K2, V]) setConfig(config *Config) *cachedFn[K1, K2, V] {
 	// default value
 	if config == nil {
 		config = &Config{}
@@ -147,33 +146,52 @@ func (c *cachedFn[Ctx, K, V]) setConfig(config *Config) *cachedFn[Ctx, K, V] {
 	return c
 }
 
-func (c *cachedFn[Ctx, K, V]) invoke2(key1 Ctx, key2 K) (retv V) {
+func (c *cachedFn[K1, K2, V]) invoke2(key1 K1, key2 K2) (retv V) {
 	retv, _ = c.invoke2err(key1, key2)
 	return retv
 }
 
+var _isHashKey map[any]int
+func isHashableKey(key any) (canHash bool) {
+	defer func() {
+		if err := recover(); err != nil {
+			canHash = false
+		}
+	}()
+	_ = _isHashKey[key]
+	return reflect.ValueOf(key).Kind() != reflect.Pointer
+}
+
 // Invoke cached function with 2 parameter
 func (c *cachedFn[Ctx, K, V]) invoke2err(key1 Ctx, key2 K) (retv V, err error) {
-	// init
-	checkCacheCount := 0
-	_ = checkCacheCount
-
 	// 1. generate pkey
-	var pkey any = key2
-	if _, hasCtx := any(key1).(context.Context); hasCtx || c.keyLen <= 1 {
-		// ignore context key
-		kind := reflect.TypeOf(key2).Kind()
-		if c.needDumpKey {
-			pkey = dump.Dump(key2)
-		} else if kind == reflect.Map || kind == reflect.Slice || kind == reflect.Pointer {
-			pkey = fmt.Sprintf("%#v", key2)
+	var pkey any
+	if c.keyLen == 2 {
+		if _, hasCtx := any(key1).(context.Context); hasCtx {
+			pkey = key2
+			if !c.needDumpKey {
+				c.needDumpKey = !isHashableKey(key2)
+			}
+		} else {
+			pkey = [2]any{key1, key2}
+			if !c.needDumpKey {
+				c.needDumpKey = !isHashableKey(key1) || !isHashableKey(key2)
+			}
+		}
+	} else if c.keyLen == 1 {
+		if _, hasCtx := any(key2).(context.Context); hasCtx {
+			pkey = 0
+		} else {
+			pkey = key2
+			if !c.needDumpKey {
+				c.needDumpKey = !isHashableKey(key2)
+			}
 		}
 	} else {
-		if c.needDumpKey {
-			pkey = dump.Dump(key1) + "," + dump.Dump(key2)
-		} else {
-			pkey = fmt.Sprintf("%#v,%#v", key1, key2)
-		}
+		pkey = 0
+	}
+	if c.needDumpKey {
+		pkey = dump.Dump(pkey)
 	}
 
 	// 2. require lock for each pkey(go routine safe)
@@ -185,6 +203,7 @@ func (c *cachedFn[Ctx, K, V]) invoke2err(key1 Ctx, key2 K) (retv V, err error) {
 	}
 
 	// 3. check cache
+	checkCacheCount := 0
 checkCache:
 	checkCacheCount++
 	pkeyLock.RLock()

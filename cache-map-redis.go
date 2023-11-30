@@ -3,21 +3,22 @@ package gofnext
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"sync"
 	"time"
 
+	"crypto/md5"
 	"crypto/sha512"
 	"encoding/hex"
 
+	"github.com/ahuigo/gofnext/dump"
 	"github.com/go-redis/redis"
 )
 
 type redisMap struct {
-	mu          sync.Mutex
-	redisClient redis.UniversalClient
-	ttl         time.Duration
-	redisPreKey string
+	mu            sync.Mutex
+	redisClient   redis.UniversalClient
+	ttl           time.Duration
+	redisPreKey   string
 	maxHashKeyLen int
 }
 
@@ -41,9 +42,8 @@ func NewCacheRedis(mapKey string, config *redis.UniversalOptions) *redisMap {
 	}
 	redisClient := redis.NewUniversalClient(config)
 	return &redisMap{
-		redisClient: redisClient,
-		redisPreKey: mapKey,
-		maxHashKeyLen: 2000,
+		redisClient:   redisClient,
+		redisPreKey:   mapKey,
 	}
 }
 
@@ -52,22 +52,28 @@ func (m *redisMap) ClearAll() *redisMap {
 	return m
 }
 
-
 func (m *redisMap) strkey(key any) string {
 	var r string
 	switch rt := key.(type) {
 	case string:
-		r = rt	
+		r = rt
 	default:
-		r = fmt.Sprintf("%#v", key)
+		r = dump.Dump(key)
 	}
-	if len(r) > m.maxHashKeyLen{
-		hash := sha512.Sum512([]byte(r))
-		r = hex.EncodeToString(hash[:])
+	if m.maxHashKeyLen > 0 && len(r) > m.maxHashKeyLen {
+		if m.maxHashKeyLen <= 32 {
+			hash := md5.Sum([]byte(r))
+			r = hex.EncodeToString(hash[:])
+		}else if m.maxHashKeyLen <= 64 {
+			hash := sha512.Sum512_256([]byte(r))
+			r = hex.EncodeToString(hash[:])
+		}else{
+			hash := sha512.Sum512([]byte(r))
+			r = hex.EncodeToString(hash[:])
+		}
 	}
 	return r
 }
-
 
 func (m *redisMap) Store(key, value any, err error) {
 	pkey := m.strkey(key)

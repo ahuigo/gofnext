@@ -16,6 +16,7 @@ TOC
     - [CachedFunction with lru cache](#cachedfunction-with-lru-cache)
     - [CachedFunction with redis cache](#cachedfunction-with-redis-cache)
   - [Object functions](#object-functions)
+  - [Dump](#dump)
 
 ## Decorator cases
 
@@ -170,7 +171,6 @@ Refer to: [decorator redis example](https://github.com/ahuigo/gofnext/blob/main/
     )
 
     func TestRedisCacheFuncWithTTL(t *testing.T) {
-
         // Parallel invocation of multiple functions.
         for i := 0; i < 10; i++ {
             score, _ := getUserScoreFromDbWithCache(1)
@@ -180,7 +180,9 @@ Refer to: [decorator redis example](https://github.com/ahuigo/gofnext/blob/main/
         }
     }
 
+You could
 > Warning: Since redis needs JSON marshaling, this may result in data loss.
+
 
 ## Object functions
 Refer to: [object example](https://github.com/ahuigo/gofnext/blob/main/examples/object_test.go)
@@ -199,3 +201,12 @@ Refer to: [object example](https://github.com/ahuigo/gofnext/blob/main/examples/
         out, _ = json.Marshal(objString)
         fmt.Println(string(out))                 //output: {"k1":"v1","k2":"v2"}
     }
+
+## Dump 
+Refer to: [dump example](https://github.com/ahuigo/gofnext/blob/main/examples/dump_test.go)
+
+	p := &person
+	expectedP := "&Person:{Name:\"John Doe\",age:30}"
+	if result := dump.Dump(p); result != expectedP {
+		t.Errorf("Expected %s, but got %s", expectedP, result)
+	}

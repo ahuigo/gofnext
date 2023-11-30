@@ -10,17 +10,18 @@ func TestMarshal(t *testing.T) {
 		name string
 	}
 	type MyStruct struct {
-		Name   string
-		nums   []int
-		Remark [1]string `json:"remark"`
-		stus    map[int]*Stu
+		Name       string
+		nums       []int
+		Nil        *int
+		Remark     [1]string `json:"remark"`
+		pointerMap map[string]*Stu
 	}
 
 	myStruct := MyStruct{
-		Name:   "public",
-		nums:   []int{1, 2},
-		Remark: [1]string{"remark"},
-		stus:    map[int]*Stu{1: {name: "private"}},
+		Name:       "public",
+		nums:       []int{1, 2},
+		Remark:     [1]string{"remark"},
+		pointerMap: map[string]*Stu{"stu1": {name: "private"}},
 	}
 
 	data, err := Marshal(myStruct)
