@@ -14,12 +14,12 @@ type Config struct {
 	TTL                   time.Duration
 	CacheMap              CacheMap
 	NeedDumpKey           bool
-	NeedCmpKeyPointerAddr bool
+	NeedHashKeyPointerAddr bool
 }
 
 type cachedFn[K1 any, K2 any, V any] struct {
 	needDumpKey           bool
-	needCmpKeyPointerAddr bool
+	needHashKeyPointerAddr bool
 	cacheMap              CacheMap
 	pkeyLockMap           sync.Map
 	keyLen                int
@@ -37,7 +37,7 @@ func (c *cachedFn[K1, K2, V]) setConfig(config *Config) *cachedFn[K1, K2, V] {
 
 	// init value
 	c.cacheMap = config.CacheMap
-	c.needCmpKeyPointerAddr = config.NeedCmpKeyPointerAddr
+	c.needHashKeyPointerAddr = config.NeedHashKeyPointerAddr
 	c.needDumpKey = config.NeedDumpKey
 	if config.TTL > 0 {
 		c.cacheMap.SetTTL(config.TTL)
@@ -169,7 +169,7 @@ func isHashableKey(key any, cmpPtr bool) (canHash bool) {
 func (c *cachedFn[Ctx, K, V]) invoke2err(key1 Ctx, key2 K) (retv V, err error) {
 	// 1. generate pkey
 	var pkey any
-	cmpPtr := c.needCmpKeyPointerAddr
+	cmpPtr := c.needHashKeyPointerAddr
 	if c.keyLen == 2 {
 		if _, hasCtx := any(key1).(context.Context); hasCtx {
 			pkey = key2
@@ -195,7 +195,7 @@ func (c *cachedFn[Ctx, K, V]) invoke2err(key1 Ctx, key2 K) (retv V, err error) {
 		pkey = 0
 	}
 	if c.needDumpKey {
-		pkey = dump.String(pkey, c.needCmpKeyPointerAddr)
+		pkey = dump.String(pkey, c.needHashKeyPointerAddr)
 	}
 
 	// 2. require lock for each pkey(go routine safe)

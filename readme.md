@@ -1,7 +1,7 @@
 # Go function extended
 This **gofnext** provides the following functions extended. 
 - Cache decorators: Similar to Python's `functools.cache` and `functools.lru_cache`. 
-    - > Additionally, it supports Redis caching and custom caching.
+    - Additionally, it supports Redis caching and custom caching.
 - Dump: Deep dumper for golang data, it will dump pointer's real value and struct's inner private data.
 
 TOC 
@@ -15,7 +15,7 @@ TOC
     - [Cache function with 2 params](#cache-function-with-2-params)
     - [Cache function with lru cache](#cache-function-with-lru-cache)
     - [Cache function with redis cache](#cache-function-with-redis-cache)
-    - [Compare Pointer address or value?](#compare-pointer-address-or-value)
+    - [Hash Pointer address or value?](#hash-pointer-address-or-value)
   - [Object functions](#object-functions)
   - [Dump](#dump)
 
@@ -204,15 +204,15 @@ Set redis config:
 
 > Warning: Since redis needs JSON marshaling, this may result in data loss.
 
-### Compare Pointer address or value?
-By default, if key is pointer, decorator will compare the real value instead of pointer address.
+### Hash Pointer address or value?
+Decorator will hash all function's parameters into hashkey.
+By default, if parameter is pointer, decorator will hash its real value instead of pointer address.
 
-If you wanna compare pointer address, you should turn on `NeedCmpKeyPointerAddr`:
+If you wanna hash pointer address, you should turn on `NeedHashKeyPointerAddr`:
 
 	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
-		NeedCmpKeyPointerAddr: true,
+		NeedHashKeyPointerAddr: true,
 	})
-
 
 ## Object functions
 Refer to: [object example](https://github.com/ahuigo/gofnext/blob/main/examples/object_test.go)

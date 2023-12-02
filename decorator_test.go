@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestIsHashableKeyNotCmpPtr(t *testing.T) {
+func TestIsHashableKeyNotHashPtr(t *testing.T) {
 	// Test case 1: Key is hashable
 	key1 := 10
 	canHash1 := isHashableKey(key1, false)
