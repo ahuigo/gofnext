@@ -13,6 +13,7 @@ TOC
     - [Cache function with 0 param](#cache-function-with-0-param)
     - [Cache function with 1 param](#cache-function-with-1-param)
     - [Cache function with 2 params](#cache-function-with-2-params)
+    - [Cache function with more params(\>2)](#cache-function-with-more-params2)
     - [Cache function with lru cache](#cache-function-with-lru-cache)
     - [Cache function with redis cache](#cache-function-with-redis-cache)
     - [Hash Pointer address or value?](#hash-pointer-address-or-value)
@@ -155,6 +156,50 @@ Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/exampl
             t.Errorf("executeCount should be 3, but get %d", executeCount)
         }
     }
+
+### Cache function with more params(>2)
+Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator_test.go)
+
+	executeCount := 0
+	type Stu struct {
+		name   string
+		age    int
+		gender int
+	}
+
+	// Original function
+	fn := func(name string, age, gender int) int {
+		executeCount++
+		// select score from db where name=name and age=age and gender=gender
+		switch name {
+		case "Alex":
+			return 10
+		default:
+			return 30
+		}
+	}
+
+	// Convert to extra parameters to a single parameter(2 prameters is ok)
+	fnWrap := func(arg Stu) int {
+		return fn(arg.name, arg.age, arg.gender)
+	}
+
+	// Cacheable Function
+	fnCached := gofnext.CacheFn1(fnWrap, nil)
+
+	// Parallel invocation of multiple functions.
+	parallelCall(func() {
+		score := fnCached(Stu{"Alex", 20, 1})
+		if score != 10 {
+			t.Errorf("score should be 10, but get %d", score)
+		}
+		fnCached(Stu{"Jhon", 21, 0})
+		fnCached(Stu{"Alex", 20, 1})
+	}, 10)
+
+	if executeCount != 2 {
+		t.Errorf("executeCount should be 2, but get %d", executeCount)
+	}
 
 ### Cache function with lru cache
 Refer to: [decorator lru example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-lru_test.go)

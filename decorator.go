@@ -169,17 +169,17 @@ func isHashableKey(key any, cmpPtr bool) (canHash bool) {
 func (c *cachedFn[Ctx, K, V]) invoke2err(key1 Ctx, key2 K) (retv V, err error) {
 	// 1. generate pkey
 	var pkey any
-	cmpPtr := c.needHashKeyPointerAddr
+	needHashPtrAddr := c.needHashKeyPointerAddr
 	if c.keyLen == 2 {
 		if _, hasCtx := any(key1).(context.Context); hasCtx {
 			pkey = key2
 			if !c.needDumpKey {
-				c.needDumpKey = !isHashableKey(key2, cmpPtr)
+				c.needDumpKey = !isHashableKey(key2, needHashPtrAddr)
 			}
 		} else {
 			pkey = [2]any{key1, key2}
 			if !c.needDumpKey {
-				c.needDumpKey = !isHashableKey(key1, cmpPtr) || !isHashableKey(key2, cmpPtr)
+				c.needDumpKey = !isHashableKey(key1, needHashPtrAddr) || !isHashableKey(key2, needHashPtrAddr)
 			}
 		}
 	} else if c.keyLen == 1 {
@@ -188,7 +188,7 @@ func (c *cachedFn[Ctx, K, V]) invoke2err(key1 Ctx, key2 K) (retv V, err error) {
 		} else {
 			pkey = key2
 			if !c.needDumpKey {
-				c.needDumpKey = !isHashableKey(key2, cmpPtr)
+				c.needDumpKey = !isHashableKey(key2, needHashPtrAddr)
 			}
 		}
 	} else {
