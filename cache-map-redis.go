@@ -3,6 +3,8 @@ package gofnext
 import (
 	"encoding/json"
 	"errors"
+	"hash/fnv"
+	"strconv"
 	"sync"
 	"time"
 
@@ -62,11 +64,19 @@ func (m *redisMap) SetRedisUniversalOpts(opts *redis.UniversalOptions) *redisMap
 	return m
 }
 
-
-
 func (m *redisMap) ClearAll() *redisMap {
 	m.redisClient.Del(m.redisPreKey)
 	return m
+}
+
+func (m *redisMap) HashKeyFunc(key ...any) []byte {
+	if len(key) == 0 {
+		return nil
+	} else if len(key) == 1 {
+		return dump.Bytes(key[0], false)
+	} else {
+		return dump.Bytes(key, false)
+	}
 }
 
 func (m *redisMap) strkey(key any) string {
@@ -78,7 +88,11 @@ func (m *redisMap) strkey(key any) string {
 		r = dump.String(key, false)
 	}
 	if m.maxHashKeyLen > 0 && len(r) > m.maxHashKeyLen {
-		if m.maxHashKeyLen <= 32 {
+		if m.maxHashKeyLen <= 8 {
+			h := fnv.New64a()
+			_, _ = h.Write([]byte(r))
+			return strconv.FormatUint(h.Sum64(), 16)
+		} else if m.maxHashKeyLen <= 32 {
 			hash := md5.Sum([]byte(r))
 			r = hex.EncodeToString(hash[:])
 		} else if m.maxHashKeyLen <= 64 {

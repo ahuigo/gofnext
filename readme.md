@@ -17,6 +17,7 @@ TOC
     - [Cache function with lru cache](#cache-function-with-lru-cache)
     - [Cache function with redis cache](#cache-function-with-redis-cache)
     - [Hash Pointer address or value?](#hash-pointer-address-or-value)
+    - [Custom hash key function](#custom-hash-key-function)
   - [Object functions](#object-functions)
   - [Dump](#dump)
 
@@ -257,6 +258,21 @@ If you wanna hash pointer address, you should turn on `NeedHashKeyPointerAddr`:
 
 	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
 		NeedHashKeyPointerAddr: true,
+	})
+
+### Custom hash key function
+Refer to: [example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-key-custom_test.go)
+
+	// hash key function
+	hashKeyFunc := func(keys ...any) []byte{
+		user := keys[0].(*UserInfo)
+		flag := keys[1].(bool)
+		return []byte(fmt.Sprintf("user:%d,flag:%t", user.id, flag))
+	}
+
+	// Cacheable Function
+	getUserScoreFromDbWithCache := gofnext.CacheFn2Err(getUserScore, &gofnext.Config{
+		HashKeyFunc: hashKeyFunc,
 	})
 
 ## Object functions

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -103,6 +104,8 @@ func marshalValueToBuffer(refV reflect.Value, buf *bytes.Buffer) error {
 		buf.WriteString("}")
 	case reflect.Func, reflect.Chan:
 		// do nothing
+	case reflect.Bool:
+		buf.WriteString(strconv.FormatBool(refV.Bool()))
 	default:
 		return nil
 	}

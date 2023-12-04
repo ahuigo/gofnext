@@ -11,19 +11,22 @@ import (
 )
 
 type Config struct {
-	TTL                   time.Duration
-	CacheMap              CacheMap
-	NeedDumpKey           bool
+	TTL                    time.Duration
+	CacheMap               CacheMap
+	NeedDumpKey            bool
 	NeedHashKeyPointerAddr bool
+	HashKeyFunc            func(args ...any) []byte
 }
 
+
 type cachedFn[K1 any, K2 any, V any] struct {
-	needDumpKey           bool
+	needDumpKey            bool
 	needHashKeyPointerAddr bool
-	cacheMap              CacheMap
-	pkeyLockMap           sync.Map
-	keyLen                int
-	getFunc               func(K1, K2) (V, error)
+	hashKeyFunc            func(args ...any) []byte
+	cacheMap               CacheMap
+	pkeyLockMap            sync.Map
+	keyLen                 int
+	getFunc                func(K1, K2) (V, error)
 }
 
 func (c *cachedFn[K1, K2, V]) setConfig(config *Config) *cachedFn[K1, K2, V] {
@@ -41,6 +44,41 @@ func (c *cachedFn[K1, K2, V]) setConfig(config *Config) *cachedFn[K1, K2, V] {
 	c.needDumpKey = config.NeedDumpKey
 	if config.TTL > 0 {
 		c.cacheMap.SetTTL(config.TTL)
+	}
+	// init hashKeyFuncMethod
+	if config.HashKeyFunc != nil {
+		c.hashKeyFunc = config.HashKeyFunc
+	}else{
+		cacheMapRefV := reflect.ValueOf(c.cacheMap)
+		methodValue := cacheMapRefV.MethodByName("HashKeyFunc")
+	
+		if methodValue.IsValid() {
+			// c.hashKeyFunc = methodValue.Interface().(func(...any) []byte)
+			c.hashKeyFunc = func(keys ...any) []byte {
+				reflectKeys := make([]reflect.Value, 1)
+				reflectKeys[0] = reflect.ValueOf(keys)
+				result := methodValue.Call(reflectKeys)
+				if len(result) > 0 {
+					if bytes, ok := result[0].Interface().([]byte); ok {
+						return bytes
+					}
+				}
+				return nil
+			}
+			c.hashKeyFunc = func(keys ...any) []byte {
+				reflectKeys := make([]reflect.Value, len(keys))
+				for i, key := range keys {
+					reflectKeys[i] = reflect.ValueOf(key)
+				}
+				result := methodValue.Call(reflectKeys)
+				if len(result) > 0 {
+					if bytes, ok := result[0].Interface().([]byte); ok {
+						return bytes
+					}
+				}
+				return nil
+			}
+		}
 	}
 	return c
 }
@@ -165,21 +203,32 @@ func isHashableKey(key any, cmpPtr bool) (canHash bool) {
 	return reflect.ValueOf(key).Kind() != reflect.Pointer
 }
 
-// Invoke cached function with 2 parameter
-func (c *cachedFn[Ctx, K, V]) invoke2err(key1 Ctx, key2 K) (retv V, err error) {
-	// 1. generate pkey
-	var pkey any
+func (c *cachedFn[K1, K2, V]) hashKeyFuncWrap(key1 K1, key2 K2) (pkey any) {
+	// outer hash key func
+	if c.hashKeyFunc != nil {
+		if c.keyLen == 2 {
+			pkey = string(c.hashKeyFunc(key1, key2))
+		} else if c.keyLen == 1 {
+			pkey = string(c.hashKeyFunc(key2))
+		} else {
+			pkey = 0
+		}
+		return pkey
+	}
+
+	// inner hash key func
 	needHashPtrAddr := c.needHashKeyPointerAddr
+	needDumpKey := c.needDumpKey
 	if c.keyLen == 2 {
 		if _, hasCtx := any(key1).(context.Context); hasCtx {
 			pkey = key2
-			if !c.needDumpKey {
-				c.needDumpKey = !isHashableKey(key2, needHashPtrAddr)
+			if !needDumpKey {
+				needDumpKey = !isHashableKey(key2, needHashPtrAddr)
 			}
 		} else {
 			pkey = [2]any{key1, key2}
-			if !c.needDumpKey {
-				c.needDumpKey = !isHashableKey(key1, needHashPtrAddr) || !isHashableKey(key2, needHashPtrAddr)
+			if !needDumpKey {
+				needDumpKey = !isHashableKey(key1, needHashPtrAddr) || !isHashableKey(key2, needHashPtrAddr)
 			}
 		}
 	} else if c.keyLen == 1 {
@@ -187,16 +236,23 @@ func (c *cachedFn[Ctx, K, V]) invoke2err(key1 Ctx, key2 K) (retv V, err error) {
 			pkey = 0
 		} else {
 			pkey = key2
-			if !c.needDumpKey {
-				c.needDumpKey = !isHashableKey(key2, needHashPtrAddr)
+			if !needDumpKey {
+				needDumpKey = !isHashableKey(key2, needHashPtrAddr)
 			}
 		}
 	} else {
 		pkey = 0
 	}
-	if c.needDumpKey {
+	if needDumpKey {
 		pkey = dump.String(pkey, c.needHashKeyPointerAddr)
 	}
+	return pkey
+}
+
+// Invoke cached function with 2 parameter
+func (c *cachedFn[K1, K2, V]) invoke2err(key1 K1, key2 K2) (retv V, err error) {
+	// 1. generate pkey
+	var pkey any = c.hashKeyFuncWrap(key1, key2)
 
 	// 2. require lock for each pkey(go routine safe)
 	var tmpOnce sync.RWMutex

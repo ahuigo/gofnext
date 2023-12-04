@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -106,8 +107,13 @@ func dump(refV reflect.Value, hashPtrAddr bool, ps PtrSeen) []byte {
 		buf.WriteString("<func>")
 	case reflect.Chan:
 		buf.WriteString("<chan>")
+	case reflect.Bool:
+		buf.WriteString(strconv.FormatBool(refV.Bool()))
+		msg := fmt.Sprintf("unsupported kind %s", refV.Kind())
+		panic(msg)
 	default:
-		panic("not supported")
+		msg := fmt.Sprintf("unsupported kind %s", refV.Kind())
+		panic(msg)
 	}
 
 	return buf.Bytes()
