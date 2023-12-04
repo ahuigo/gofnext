@@ -14,14 +14,14 @@ type Config struct {
 	TTL                    time.Duration
 	CacheMap               CacheMap
 	NeedDumpKey            bool
-	NeedHashKeyPointerAddr bool
+	HashKeyPointerAddr bool
 	HashKeyFunc            func(args ...any) []byte
 }
 
 
 type cachedFn[K1 any, K2 any, V any] struct {
 	needDumpKey            bool
-	needHashKeyPointerAddr bool
+	hashKeyPointerAddr bool
 	hashKeyFunc            func(args ...any) []byte
 	cacheMap               CacheMap
 	pkeyLockMap            sync.Map
@@ -40,7 +40,7 @@ func (c *cachedFn[K1, K2, V]) setConfig(config *Config) *cachedFn[K1, K2, V] {
 
 	// init value
 	c.cacheMap = config.CacheMap
-	c.needHashKeyPointerAddr = config.NeedHashKeyPointerAddr
+	c.hashKeyPointerAddr = config.HashKeyPointerAddr
 	c.needDumpKey = config.NeedDumpKey
 	if config.TTL > 0 {
 		c.cacheMap.SetTTL(config.TTL)
@@ -206,7 +206,7 @@ func (c *cachedFn[K1, K2, V]) hashKeyFuncWrap(key1 K1, key2 K2) (pkey any) {
 	}
 
 	// inner hash key func
-	needHashPtrAddr := c.needHashKeyPointerAddr
+	needHashPtrAddr := c.hashKeyPointerAddr
 	needDumpKey := c.needDumpKey
 	if c.keyLen == 2 {
 		if _, hasCtx := any(key1).(context.Context); hasCtx {
@@ -233,7 +233,7 @@ func (c *cachedFn[K1, K2, V]) hashKeyFuncWrap(key1 K1, key2 K2) (pkey any) {
 		pkey = 0
 	}
 	if needDumpKey {
-		pkey = dump.String(pkey, c.needHashKeyPointerAddr)
+		pkey = dump.String(pkey, needHashPtrAddr)
 	}
 	return pkey
 }

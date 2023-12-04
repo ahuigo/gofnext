@@ -25,7 +25,7 @@ func TestCacheFuncKeyPointerAddr(t *testing.T) {
 
 	// Cacheable Function
 	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
-		NeedHashKeyPointerAddr: true,
+		HashKeyPointerAddr: true,
 	})
 
 	// Parallel invocation of multiple functions.

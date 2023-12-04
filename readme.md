@@ -2,7 +2,6 @@
 This **gofnext** provides the following functions extended. 
 - Cache decorators: Similar to Python's `functools.cache` and `functools.lru_cache`. 
     - Additionally, it supports Redis caching and custom caching.
-- Dump: Deep dumper for golang data, it will dump pointer's real value and struct's inner private data.
 
 TOC 
 - [Go function extended](#go-function-extended)
@@ -18,8 +17,6 @@ TOC
     - [Cache function with redis cache](#cache-function-with-redis-cache)
     - [Hash Pointer address or value?](#hash-pointer-address-or-value)
     - [Custom hash key function](#custom-hash-key-function)
-  - [Object functions](#object-functions)
-  - [Dump](#dump)
 
 ## Decorator cases
 
@@ -43,8 +40,6 @@ TOC
     - [x] Support memory-lru CacheMap
     - [x] Support redis CacheMap
     - [x] Support customization of the CacheMap(manually)
-- [x] Dump (gofnext/dump)
-- [x] Object (gofnext/object)
 
 ## Decorator examples
 Refer to: [examples](https://github.com/ahuigo/gofnext/blob/main/examples)
@@ -206,6 +201,8 @@ Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/exampl
 Refer to: [decorator lru example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-lru_test.go)
 
 ### Cache function with redis cache
+> Warning: Since redis needs JSON marshaling, this may result in data loss.
+
 Refer to: [decorator redis example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-redis_test.go)
 
     var (
@@ -248,19 +245,19 @@ Set redis config:
 		Addrs: []string{"localhost:6379"},
 	})
 
-> Warning: Since redis needs JSON marshaling, this may result in data loss.
 
 ### Hash Pointer address or value?
 Decorator will hash all function's parameters into hashkey.
 By default, if parameter is pointer, decorator will hash its real value instead of pointer address.
 
-If you wanna hash pointer address, you should turn on `NeedHashKeyPointerAddr`:
+If you wanna hash pointer address, you should turn on `HashKeyPointerAddr`:
 
 	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
-		NeedHashKeyPointerAddr: true,
+		HashKeyPointerAddr: true,
 	})
 
 ### Custom hash key function
+> You need to resolve key collisions yourself.
 Refer to: [example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-key-custom_test.go)
 
 	// hash key function
@@ -274,36 +271,3 @@ Refer to: [example](https://github.com/ahuigo/gofnext/blob/main/examples/decorat
 	getUserScoreFromDbWithCache := gofnext.CacheFn2Err(getUserScore, &gofnext.Config{
 		HashKeyFunc: hashKeyFunc,
 	})
-
-## Object functions
-Refer to: [object example](https://github.com/ahuigo/gofnext/blob/main/examples/object_test.go)
-
-	import "github.com/ahuigo/gofnext/object"
-
-    func TestConvertMapBytes(t *testing.T) {
-        objBytes := map[string][]byte{
-            "k1": []byte("v1"),
-            "k2": []byte("v2"),
-        }
-        out, _ := json.Marshal(objBytes)
-        fmt.Println(string(out))                 //output: {"k1":"djE=","k2":"djI="}
-
-        objString := object.ConvertObjectByte2String(objBytes)
-        out, _ = json.Marshal(objString)
-        fmt.Println(string(out))                 //output: {"k1":"v1","k2":"v2"}
-    }
-
-## Dump 
-Refer to: [dump example](https://github.com/ahuigo/gofnext/blob/main/examples/dump_test.go)
-
-Dump any value to string(include private field)
-
-    type Person struct {
-        Name string
-        age  &int //private
-    }
-	p := &person
-	expectedP := "&Person{Name:\"John Doe\",age:&30}"
-	if result := dump.String(p); result != expectedP {
-		t.Errorf("Expected %s, but got %s", expectedP, result)
-	}
