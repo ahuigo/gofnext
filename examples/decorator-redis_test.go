@@ -64,13 +64,13 @@ func TestRedisCacheFuncWithTTL(t *testing.T) {
 func TestRedisCacheFuncWithNoTTL(t *testing.T) {
 	// Original function
 	executeCount := 0
-	getUserScore := func(more int) (int, error) {
+	getUserScore := func(more int, flag bool) (int, error) {
 		executeCount++
 		return 98 + more, nil
 	}
 
 	// Cacheable Function
-	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(
+	getUserScoreFromDbWithCache := gofnext.CacheFn2Err(
 		getUserScore,
 		&gofnext.Config{
 			CacheMap: gofnext.NewCacheRedis("redis-cache-key").ClearAll(),
@@ -79,13 +79,13 @@ func TestRedisCacheFuncWithNoTTL(t *testing.T) {
 
 	// Parallel invocation of multiple functions.
 	parallelCall(func() {
-		score, err := getUserScoreFromDbWithCache(1)
+		score, err := getUserScoreFromDbWithCache(1, true)
 		if err != nil || score != 99 {
 			t.Errorf("score should be 99, but get %d", score)
 		}
-		getUserScoreFromDbWithCache(2)
-		getUserScoreFromDbWithCache(3)
-		getUserScoreFromDbWithCache(3)
+		getUserScoreFromDbWithCache(2, true)
+		getUserScoreFromDbWithCache(3, true)
+		getUserScoreFromDbWithCache(3, true)
 	}, 10)
 
 	if executeCount != 3 {

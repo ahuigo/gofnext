@@ -53,31 +53,20 @@ func (c *cachedFn[K1, K2, V]) setConfig(config *Config) *cachedFn[K1, K2, V] {
 		methodValue := cacheMapRefV.MethodByName("HashKeyFunc")
 	
 		if methodValue.IsValid() {
-			// c.hashKeyFunc = methodValue.Interface().(func(...any) []byte)
-			c.hashKeyFunc = func(keys ...any) []byte {
-				reflectKeys := make([]reflect.Value, 1)
-				reflectKeys[0] = reflect.ValueOf(keys)
-				result := methodValue.Call(reflectKeys)
-				if len(result) > 0 {
-					if bytes, ok := result[0].Interface().([]byte); ok {
-						return bytes
-					}
-				}
-				return nil
-			}
-			c.hashKeyFunc = func(keys ...any) []byte {
-				reflectKeys := make([]reflect.Value, len(keys))
-				for i, key := range keys {
-					reflectKeys[i] = reflect.ValueOf(key)
-				}
-				result := methodValue.Call(reflectKeys)
-				if len(result) > 0 {
-					if bytes, ok := result[0].Interface().([]byte); ok {
-						return bytes
-					}
-				}
-				return nil
-			}
+			c.hashKeyFunc = methodValue.Interface().(func(...any) []byte)
+			// c.hashKeyFunc = func(keys ...any) []byte {
+			// 	reflectKeys := make([]reflect.Value, len(keys))
+			// 	for i, key := range keys {
+			// 		reflectKeys[i] = reflect.ValueOf(key)
+			// 	}
+			// 	result := methodValue.Call(reflectKeys)
+			// 	if len(result) > 0 {
+			// 		if bytes, ok := result[0].Interface().([]byte); ok {
+			// 			return bytes
+			// 		}
+			// 	}
+			// 	return nil
+			// }
 		}
 	}
 	return c

@@ -27,6 +27,7 @@ func TestCacheFuncKeyCustom(t *testing.T) {
 	hashKeyFunc := func(keys ...any) []byte{
 		user := keys[0].(*UserInfo)
 		flag := keys[1].(bool)
+		// println(fmt.Sprintf("user:%d,flag:%t", user.id, flag))
 		return []byte(fmt.Sprintf("user:%d,flag:%t", user.id, flag))
 	}
 

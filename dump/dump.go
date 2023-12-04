@@ -109,8 +109,6 @@ func dump(refV reflect.Value, hashPtrAddr bool, ps PtrSeen) []byte {
 		buf.WriteString("<chan>")
 	case reflect.Bool:
 		buf.WriteString(strconv.FormatBool(refV.Bool()))
-		msg := fmt.Sprintf("unsupported kind %s", refV.Kind())
-		panic(msg)
 	default:
 		msg := fmt.Sprintf("unsupported kind %s", refV.Kind())
 		panic(msg)
