@@ -12,7 +12,7 @@ func TestCacheFuncKeyCustom(t *testing.T) {
 	type UserInfo struct {
 		Name string
 		Age  int
-		id int
+		id   int
 	}
 	// Original function
 	executeCount := 0
@@ -24,7 +24,7 @@ func TestCacheFuncKeyCustom(t *testing.T) {
 	}
 
 	// hash key function
-	hashKeyFunc := func(keys ...any) []byte{
+	hashKeyFunc := func(keys ...any) []byte {
 		user := keys[0].(*UserInfo)
 		flag := keys[1].(bool)
 		// println(fmt.Sprintf("user:%d,flag:%t", user.id, flag))

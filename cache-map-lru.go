@@ -18,7 +18,7 @@ type cacheLru struct {
 	listMap *sync.Map
 	maxSize int
 	mu      sync.RWMutex
-	ttl time.Duration
+	ttl     time.Duration
 }
 
 func NewCacheLru(maxSize int) *cacheLru {
@@ -70,7 +70,7 @@ func (m *cacheLru) Load(key any) (value any, existed bool, err error) {
 	return
 }
 
-func (m *cacheLru) SetTTL(ttl time.Duration) CacheMap{
+func (m *cacheLru) SetTTL(ttl time.Duration) CacheMap {
 	m.ttl = ttl
 	return m
 }

@@ -14,11 +14,11 @@ func TestConvertMapBytes(t *testing.T) {
 		"k2": []byte("v2"),
 	}
 	out, _ := json.Marshal(objBytes)
-	fmt.Println(string(out))			 //output: {"k1":"djE=","k2":"djI="}
+	fmt.Println(string(out)) //output: {"k1":"djE=","k2":"djI="}
 
 	objString := object.ConvertObjectByte2String(objBytes)
 	out, _ = json.Marshal(objString)
-	fmt.Println(string(out))			 //output: {"k1":"v1","k2":"v2"}
+	fmt.Println(string(out)) //output: {"k1":"v1","k2":"v2"}
 
 	expectedOut := `{"k1":"v1","k2":"v2"}`
 	if string(out) != expectedOut {

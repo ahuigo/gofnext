@@ -25,7 +25,7 @@ func getVersion() string {
 }
 
 func sleepRandom(min time.Duration, max time.Duration) {
-    randomDuration := time.Duration(rand.Int63n(int64(max-min)) + int64(min))
+	randomDuration := time.Duration(rand.Int63n(int64(max-min)) + int64(min))
 
-    time.Sleep(randomDuration)
+	time.Sleep(randomDuration)
 }

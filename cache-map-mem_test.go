@@ -64,7 +64,7 @@ func TestCacheFuncWith2Param(t *testing.T) {
 		executeCount++
 		fmt.Println("select score from db where id=", arg[0], time.Now())
 		time.Sleep(10 * time.Millisecond)
-		return 98+arg[0], errors.New("db error")
+		return 98 + arg[0], errors.New("db error")
 	}
 
 	// Cacheable Function

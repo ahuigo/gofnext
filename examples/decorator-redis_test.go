@@ -8,10 +8,9 @@ import (
 	"github.com/go-redis/redis"
 )
 
-
 func TestRedisCacheClient(t *testing.T) {
 	// method 1: by default: localhost:6379
-	cache := gofnext.NewCacheRedis("redis-cache-key") 
+	cache := gofnext.NewCacheRedis("redis-cache-key")
 
 	// method 2: set redis addr
 	cache.SetRedisAddr("192.168.1.1:6379")
@@ -38,7 +37,7 @@ func TestRedisCacheFuncWithTTL(t *testing.T) {
 
 	// Cacheable Function
 	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
-		TTL:  time.Hour,
+		TTL:      time.Hour,
 		CacheMap: gofnext.NewCacheRedis("redis-cache-key").ClearAll(),
 	})
 

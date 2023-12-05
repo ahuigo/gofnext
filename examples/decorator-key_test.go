@@ -12,7 +12,7 @@ func TestCacheFuncKeyStruct(t *testing.T) {
 	type UserInfo struct {
 		Name string
 		Age  int
-		id int
+		id   int
 	}
 	// Original function
 	executeCount := 0
@@ -110,7 +110,7 @@ func TestCacheFuncKeySlice(t *testing.T) {
 	type UserInfo struct {
 		Name string
 		Age  int
-		id int
+		id   int
 	}
 	// Original function
 	executeCount := 0
@@ -145,7 +145,7 @@ func TestCacheFuncKeyPointer(t *testing.T) {
 	type UserInfo struct {
 		Name string
 		Age  int
-		id int
+		id   int
 	}
 	// Original function
 	executeCount := 0
@@ -180,7 +180,7 @@ func TestCacheFuncKeyInnerPointer(t *testing.T) {
 	type UserInfo struct {
 		Name string
 		Age  int
-		id int
+		id   int
 	}
 	type ExtUserInfo struct {
 		u *UserInfo
@@ -196,18 +196,18 @@ func TestCacheFuncKeyInnerPointer(t *testing.T) {
 
 	// Cacheable Function
 	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
-		TTL: time.Hour,
+		TTL:         time.Hour,
 		NeedDumpKey: true,
 	})
 
 	// Parallel invocation of multiple functions.
 	parallelCall(func() {
-		score, _ := getUserScoreFromDbWithCache(ExtUserInfo{u:&UserInfo{id: 1}})
+		score, _ := getUserScoreFromDbWithCache(ExtUserInfo{u: &UserInfo{id: 1}})
 		if score != 99 {
 			t.Errorf("score should be 99, but get %d", score)
 		}
-		getUserScoreFromDbWithCache(ExtUserInfo{u:&UserInfo{id: 2}})
-		getUserScoreFromDbWithCache(ExtUserInfo{u:&UserInfo{id: 3}})
+		getUserScoreFromDbWithCache(ExtUserInfo{u: &UserInfo{id: 2}})
+		getUserScoreFromDbWithCache(ExtUserInfo{u: &UserInfo{id: 3}})
 	}, 10)
 
 	if executeCount != 3 {

@@ -11,22 +11,21 @@ import (
 )
 
 type Config struct {
-	TTL                    time.Duration
-	CacheMap               CacheMap
-	NeedDumpKey            bool
+	TTL                time.Duration
+	CacheMap           CacheMap
+	NeedDumpKey        bool
 	HashKeyPointerAddr bool
-	HashKeyFunc            func(args ...any) []byte
+	HashKeyFunc        func(args ...any) []byte
 }
 
-
 type cachedFn[K1 any, K2 any, V any] struct {
-	needDumpKey            bool
+	needDumpKey        bool
 	hashKeyPointerAddr bool
-	hashKeyFunc            func(args ...any) []byte
-	cacheMap               CacheMap
-	pkeyLockMap            sync.Map
-	keyLen                 int
-	getFunc                func(K1, K2) (V, error)
+	hashKeyFunc        func(args ...any) []byte
+	cacheMap           CacheMap
+	pkeyLockMap        sync.Map
+	keyLen             int
+	getFunc            func(K1, K2) (V, error)
 }
 
 func (c *cachedFn[K1, K2, V]) setConfig(config *Config) *cachedFn[K1, K2, V] {
@@ -48,10 +47,10 @@ func (c *cachedFn[K1, K2, V]) setConfig(config *Config) *cachedFn[K1, K2, V] {
 	// init hashKeyFuncMethod
 	if config.HashKeyFunc != nil {
 		c.hashKeyFunc = config.HashKeyFunc
-	}else{
+	} else {
 		cacheMapRefV := reflect.ValueOf(c.cacheMap)
 		methodValue := cacheMapRefV.MethodByName("HashKeyFunc")
-	
+
 		if methodValue.IsValid() {
 			c.hashKeyFunc = methodValue.Interface().(func(...any) []byte)
 			// c.hashKeyFunc = func(keys ...any) []byte {

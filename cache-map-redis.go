@@ -71,7 +71,7 @@ func (m *redisMap) ClearAll() *redisMap {
 }
 
 func (m *redisMap) HashKeyFunc(key ...any) []byte {
-	fmt.Printf("args num:%#v\n", key)  // 变参数是1
+	fmt.Printf("args num:%#v\n", key) // 变参数是1
 	if len(key) == 0 {
 		return nil
 	} else if len(key) == 1 {

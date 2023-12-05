@@ -1,3 +1,5 @@
+//go:build !race
+
 package examples
 
 import (
@@ -12,7 +14,7 @@ func TestCacheFuncKeyPointerAddr(t *testing.T) {
 	type UserInfo struct {
 		Name string
 		Age  int
-		id int
+		id   int
 	}
 	// Original function
 	executeCount := 0

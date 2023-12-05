@@ -19,9 +19,10 @@ func getUserAnonymouse() (UserInfo, error) {
 	time.Sleep(10 * time.Millisecond)
 	return UserInfo{Name: "Anonymous", Age: 9}, errors.New("db error")
 }
+
 var (
 	// Cacheable Function
-	getUserInfoFromDbWithCache = gofnext.CacheFn0Err(getUserAnonymouse, nil) 
+	getUserInfoFromDbWithCache = gofnext.CacheFn0Err(getUserAnonymouse, nil)
 )
 
 func TestCacheFunc0Err(t *testing.T) {

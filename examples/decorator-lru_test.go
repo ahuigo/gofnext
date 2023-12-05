@@ -20,7 +20,7 @@ func TestCacheFuncWithOneParamLRU(t *testing.T) {
 
 	// Cacheable Function
 	var getUserScoreFromDbWithLruCache = gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
-		TTL:  time.Hour,
+		TTL:      time.Hour,
 		CacheMap: gofnext.NewCacheLru(maxCacheSize),
 	})
 

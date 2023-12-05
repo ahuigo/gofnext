@@ -4,19 +4,20 @@ import (
 	"sync"
 	"time"
 )
-type cachedValue struct{
+
+type cachedValue struct {
 	val       interface{}
 	createdAt time.Time
 	err       error
 }
 
-type memCacheMap struct{
+type memCacheMap struct {
 	*sync.Map
 	// mu sync.RWMutex
 	ttl time.Duration
 }
 
-func newCacheMapMem(ttl time.Duration) *memCacheMap{
+func newCacheMapMem(ttl time.Duration) *memCacheMap {
 	return &memCacheMap{
 		ttl: ttl,
 		Map: &sync.Map{},
@@ -25,9 +26,9 @@ func newCacheMapMem(ttl time.Duration) *memCacheMap{
 
 func (m *memCacheMap) Store(key, value any, err error) {
 	el := cachedValue{
-		val: value,
+		val:       value,
 		createdAt: time.Now(),
-		err: err,
+		err:       err,
 	}
 	m.Map.Store(key, &el)
 }
@@ -36,17 +37,17 @@ func (m *memCacheMap) Load(key any) (value any, existed bool, err error) {
 	elInter, existed := m.Map.Load(key)
 	if existed {
 		el := elInter.(*cachedValue)
-		if m.ttl>0 && time.Since(el.createdAt) > m.ttl {
+		if m.ttl > 0 && time.Since(el.createdAt) > m.ttl {
 			m.Map.Delete(key)
 			existed = false
-		}else{
+		} else {
 			return el.val, existed, el.err
 		}
 	}
 	return
 }
 
-func (m *memCacheMap) SetTTL(ttl time.Duration) CacheMap{
+func (m *memCacheMap) SetTTL(ttl time.Duration) CacheMap {
 	m.ttl = ttl
 	return m
 }

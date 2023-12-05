@@ -1,7 +1,13 @@
 msg?=
 
-test:
-	go test -coverprofile coverage.out -failfast ./...
+test: race
+	go test -coverprofile cover.out -covermode=atomic -failfast ./...
+cover: test
+	go tool cover -html=cover.out
+race: 
+	go test -race -failfast ./...
+fmt:
+	gofmt -w .
 
 .ONESHELL:
 gitcheck:
@@ -15,6 +21,3 @@ pkg: gitcheck test
 	v=`cat version` && git tag "$$v" && git push origin "$$v" && git push origin HEAD
 pkg0: test
 	v=`cat version` && git tag "$$v" && git push origin "$$v" && git push origin HEAD
-
-cover:
-	go tool cover -html=coverage.out
