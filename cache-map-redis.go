@@ -13,7 +13,7 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 
-	"github.com/ahuigo/gofnext/dump"
+	"github.com/ahuigo/gofnext/serial"
 	"github.com/go-redis/redis"
 )
 
@@ -75,9 +75,9 @@ func (m *redisMap) HashKeyFunc(key ...any) []byte {
 	if len(key) == 0 {
 		return nil
 	} else if len(key) == 1 {
-		return dump.Bytes(key[0], false)
+		return serial.Bytes(key[0], false)
 	} else {
-		return dump.Bytes(key, false)
+		return serial.Bytes(key, false)
 	}
 }
 
@@ -87,7 +87,7 @@ func (m *redisMap) strkey(key any) string {
 	case string:
 		r = rt
 	default:
-		r = dump.String(key, false)
+		r = serial.String(key, false)
 	}
 	if m.maxHashKeyLen > 0 && len(r) > m.maxHashKeyLen {
 		if m.maxHashKeyLen <= 8 {

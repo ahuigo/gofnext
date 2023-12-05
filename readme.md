@@ -1,4 +1,4 @@
-# Go function extended
+# Go function extended(go>=1.21)
 This **gofnext** provides the following functions extended. 
 - Cache decorators: Similar to Python's `functools.cache` and `functools.lru_cache`. 
     - Additionally, it supports Redis caching and custom caching.

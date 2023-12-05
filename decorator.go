@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ahuigo/gofnext/dump"
+	"github.com/ahuigo/gofnext/serial"
 )
 
 type Config struct {
@@ -233,7 +233,7 @@ func (c *cachedFn[K1, K2, V]) hashKeyFuncWrap(key1 K1, key2 K2) (pkey any) {
 		pkey = 0
 	}
 	if needDumpKey {
-		pkey = dump.String(pkey, needHashPtrAddr)
+		pkey = serial.String(pkey, needHashPtrAddr)
 	}
 	return pkey
 }

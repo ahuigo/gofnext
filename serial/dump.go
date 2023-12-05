@@ -1,4 +1,4 @@
-package dump
+package serial
 
 import (
 	"bytes"
@@ -6,12 +6,11 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
-	"strings"
 )
 
 type PtrSeen map[uintptr]struct{}
 
-func (ps PtrSeen) Add(rv reflect.Value) bool{
+func (ps PtrSeen) Add(rv reflect.Value) bool {
 	ptr := rv.Pointer()
 	if _, ok := ps[ptr]; ok {
 		// e := fmt.Sprintf("encountered a cycle via %s", rv.Type())
@@ -25,15 +24,15 @@ func (ps PtrSeen) Add(rv reflect.Value) bool{
 // Dump any value to string(include private field)
 func String(val any, hashPtrAddr bool) string {
 	refV := reflect.ValueOf(val)
-	ps:=PtrSeen{}
+	ps := PtrSeen{}
 	return string(dump(refV, hashPtrAddr, ps))
 }
 
 // Dump any value to bytes(include private field)
 func Bytes(val any, hashPtrAddr bool) []byte {
 	refV := reflect.ValueOf(val)
-	ps:=PtrSeen{}
-	return dump(refV, hashPtrAddr,ps)
+	ps := PtrSeen{}
+	return dump(refV, hashPtrAddr, ps)
 }
 
 func dump(refV reflect.Value, hashPtrAddr bool, ps PtrSeen) []byte {
@@ -66,7 +65,7 @@ func dump(refV reflect.Value, hashPtrAddr bool, ps PtrSeen) []byte {
 			}
 			if hashPtrAddr && isPtr {
 				buf.WriteString(fmt.Sprintf("*0x%x", refV.Pointer()))
-			}else{
+			} else {
 				refV = refV.Elem()
 				buf.WriteString(fmt.Sprintf("&%s", dump(refV, hashPtrAddr, ps)))
 			}
@@ -93,15 +92,17 @@ func dump(refV reflect.Value, hashPtrAddr bool, ps PtrSeen) []byte {
 		}
 		buf.WriteString("}")
 	case reflect.Map:
-		sli := make([]string, len(refV.MapKeys()))
+		sli := make([][]byte, len(refV.MapKeys()))
 		for i, key := range refV.MapKeys() {
 			keyVal := append(dump(key, hashPtrAddr, ps), ':')
 			valbytes := dump(refV.MapIndex(key), hashPtrAddr, ps)
-			sli[i] = string(append(keyVal, valbytes...))
+			sli[i] = append(keyVal, valbytes...)
 		}
-		slices.Sort(sli)
+		slices.SortFunc(sli, func(a, b []byte) int {
+			return slices.Compare(a, b)
+		})
 		buf.WriteString("{")
-		buf.WriteString(strings.Join(sli, ","))
+		buf.Write(bytes.Join(sli, []byte{','}))
 		buf.WriteString("}")
 	case reflect.Func:
 		buf.WriteString("<func>")
