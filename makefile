@@ -1,13 +1,14 @@
 msg?=
 
 test: race
-	go test -coverprofile cover.out -covermode=atomic -failfast ./...
+	go test -coverprofile cover.out -coverpkg ".,./examples" -covermode=atomic -failfast ./...
+	go test -coverprofile cover.out -coverpkg "./..." -covermode=atomic -failfast ./...
 cover: test
 	go tool cover -html=cover.out
 race: 
 	go test -race -failfast ./...
 fmt:
-	gofmt -w .
+	gofmt -s -w .
 
 .ONESHELL:
 gitcheck:
