@@ -20,11 +20,16 @@ func TestLoad(t *testing.T) {
 	}
 
 	var str string
-	data := []byte(`"Hello, World!"`)
+	data := []byte(`"Hello, World!chars:\"\r\n\t\b"`)
 	_ = Load(data, &str)
-	expected := "Hello, World!"
+	expected := "Hello, World!chars:\"\r\n\t\b"
 	if str != expected {
 		t.Errorf("got %q, want %q", str, expected)
+	}
+	data = []byte(`"Hello, World!`)
+	err := Load(data, &str)
+	if err == nil {
+		t.Errorf("should be error, but get nil")
 	}
 
 	var i int

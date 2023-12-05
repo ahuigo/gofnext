@@ -3,7 +3,7 @@
 ![Go Version](https://img.shields.io/badge/Go-%3E%3D%201.21-%23007d9c)
 [![GoDoc](https://godoc.org/github.com/ahuigo/gofnext?status.svg)](https://pkg.go.dev/github.com/ahuigo/gofnext)
 ![Build Status](https://github.com/ahuigo/gofnext/actions/workflows/test.yml/badge.svg)
-[![Go report](https://goreportcard.com/badge/github.com/ahuigo/gofnext)](https://goreportcard.com/report/github.com/ahuigo/gofnext)
+[![Go report](https://goreportcard.com/badge/github.com/ahuigo/gofnext?a=1)](https://goreportcard.com/report/github.com/ahuigo/gofnext)
 [![Coverage](https://img.shields.io/codecov/c/github/ahuigo/gofnext)](https://codecov.io/gh/ahuigo/gofnext)
 [![Contributors](https://img.shields.io/github/contributors/ahuigo/gofnext)](https://github.com/ahuigo/gofnext/graphs/contributors)
 [![License](https://img.shields.io/github/license/ahuigo/gofnext)](./LICENSE)

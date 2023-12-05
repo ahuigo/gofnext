@@ -24,6 +24,7 @@ func TestRedisCacheClient(t *testing.T) {
 	cache.SetRedisUniversalOpts(&redis.UniversalOptions{
 		Addrs: []string{"localhost:6379"},
 	})
+	cache.SetMaxHashKeyLen(0)
 	cache.SetMaxHashKeyLen(100)
 }
 

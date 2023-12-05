@@ -82,6 +82,7 @@ func (l *Loader) loadString(start int, rv reflect.Value) (end int, err error) {
 	start++
 	maxIndex := len(data) - 1
 	i := start
+	stop := false
 LOOP:
 	for ; i <= maxIndex; i++ {
 		switch data[i] {
@@ -99,15 +100,21 @@ LOOP:
 				buf.WriteByte(0x09)
 			case 'n':
 				buf.WriteByte(0x0a)
+			case 'r':
+				buf.WriteByte(0x0d)
 			default:
 				buf.WriteByte(data[i])
 			}
 		case '"':
+			stop = true
 			i++
 			break LOOP
 		default:
 			buf.WriteByte(data[i])
 		}
+	}
+	if !stop {
+		return -1, fmt.Errorf("unterminated string: %s", data[start:])
 	}
 	rv.SetString(buf.String())
 	l.pos = i

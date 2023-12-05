@@ -260,7 +260,10 @@ checkCache:
 
 	// 3.1 check if marshal needed
 	if hasCache && c.cacheMap.NeedMarshal() {
-		err = json.Unmarshal(value.([]byte), &retv)
+		err2 := json.Unmarshal(value.([]byte), &retv)
+		if err == nil {
+			err = err2
+		}
 		return retv, err
 	}
 
