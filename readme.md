@@ -10,7 +10,7 @@
 
 This **gofnext** provides the following functions extended. 
 - Cache decorators: Similar to Python's `functools.cache` and `functools.lru_cache`. 
-    - Additionally, it supports Redis caching and custom caching.
+    - In addition to memory cache, it also supports Redis caching and custom caching.
 
 TOC 
 - [Go function extended(go\>=1.21)](#go-function-extendedgo121)
@@ -52,7 +52,6 @@ TOC
 
 ## Decorator examples
 Refer to: [examples](https://github.com/ahuigo/gofnext/blob/main/examples)
-
 
 ### Cache fibonacii function
 Refer to: [decorator fib example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-fib_test.go)
@@ -208,6 +207,19 @@ Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/exampl
 
 ### Cache function with lru cache
 Refer to: [decorator lru example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-lru_test.go)
+
+	executeCount := 0
+	maxCacheSize := 2
+	var getUserScore = func(more int) (int, error) {
+		executeCount++
+		return 98 + more, errors.New("db error")
+	}
+
+	// Cacheable Function
+	var getUserScoreFromDbWithLruCache = gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
+		TTL:      time.Hour,
+		CacheMap: gofnext.NewCacheLru(maxCacheSize),
+	})
 
 ### Cache function with redis cache
 > Warning: Since redis needs JSON marshaling, this may result in data loss.
