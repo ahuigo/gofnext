@@ -14,12 +14,14 @@ type Config struct {
 	TTL                time.Duration
 	CacheMap           CacheMap
 	NeedDumpKey        bool
+	SkipCacheIfErr     bool
 	HashKeyPointerAddr bool
 	HashKeyFunc        func(args ...any) []byte
 }
 
 type cachedFn[K1 any, K2 any, V any] struct {
 	needDumpKey        bool
+	skipCacheIfErr     bool
 	hashKeyPointerAddr bool
 	hashKeyFunc        func(args ...any) []byte
 	cacheMap           CacheMap
@@ -38,9 +40,10 @@ func (c *cachedFn[K1, K2, V]) setConfig(config *Config) *cachedFn[K1, K2, V] {
 	}
 
 	// init value
-	c.cacheMap = config.CacheMap
 	c.hashKeyPointerAddr = config.HashKeyPointerAddr
 	c.needDumpKey = config.NeedDumpKey
+	c.skipCacheIfErr = config.SkipCacheIfErr
+	c.cacheMap = config.CacheMap
 	if config.TTL > 0 {
 		c.cacheMap.SetTTL(config.TTL)
 	}
@@ -259,6 +262,9 @@ checkCache:
 	pkeyLock.RUnlock()
 
 	// 3.1 check if marshal needed
+	if shouldSkipCache := c.skipCacheIfErr && err != nil; shouldSkipCache {
+		hasCache = false
+	}
 	if hasCache && c.cacheMap.NeedMarshal() {
 		err2 := json.Unmarshal(value.([]byte), &retv)
 		if err == nil {
@@ -268,7 +274,7 @@ checkCache:
 	}
 
 	// 4. Execute getFunc(only once)
-	if !hasCache {
+	if !hasCache{
 		// 4.1 try lock
 		// If 100 goroutines call the same function at the same time,
 		// only one goroutine can execute the getFunc.

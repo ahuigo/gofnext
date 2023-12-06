@@ -11,7 +11,7 @@ import (
 func TestRedisCacheClientPanic(t *testing.T) {
 	defer func() {
 		r := recover() //r.(string)
-		if r==nil{
+		if r == nil {
 			t.Error("should panic")
 		}
 	}()
@@ -29,7 +29,7 @@ func TestRedisCacheFuncErr(t *testing.T) {
 
 	// Cacheable Function
 	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
-		TTL:      500*time.Second,
+		TTL:      500 * time.Second,
 		CacheMap: gofnext.NewCacheRedis("redis-cache-key").ClearAll(),
 	})
 

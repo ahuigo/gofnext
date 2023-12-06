@@ -1,19 +1,20 @@
-# Go function extended(go>=1.21)
+# 🛠️ Go function extended
 [![tag](https://img.shields.io/github/tag/ahuigo/gofnext.svg)](https://github.com/ahuigo/gofnext/tags)
 ![Go Version](https://img.shields.io/badge/Go-%3E%3D%201.21-%23007d9c)
 [![GoDoc](https://godoc.org/github.com/ahuigo/gofnext?status.svg)](https://pkg.go.dev/github.com/ahuigo/gofnext)
 ![Build Status](https://github.com/ahuigo/gofnext/actions/workflows/test.yml/badge.svg)
-[![Go report](https://goreportcard.com/badge/github.com/ahuigo/gofnext?a=1)](https://goreportcard.com/report/github.com/ahuigo/gofnext)
+[![Go report](https://goreportcard.com/badge/github.com/ahuigo/gofnext)](https://goreportcard.com/report/github.com/ahuigo/gofnext)
 [![Coverage](https://img.shields.io/codecov/c/github/ahuigo/gofnext)](https://codecov.io/gh/ahuigo/gofnext)
 [![Contributors](https://img.shields.io/github/contributors/ahuigo/gofnext)](https://github.com/ahuigo/gofnext/graphs/contributors)
 [![License](https://img.shields.io/github/license/ahuigo/gofnext)](./LICENSE)
 
-This **gofnext** provides the following functions extended. 
-- Cache decorators: Similar to Python's `functools.cache` and `functools.lru_cache`. 
-    - In addition to memory cache, it also supports Redis caching and custom caching.
+This **gofnext** provides the following functions extended(go>=1.21).
 
-TOC 
-- [Go function extended(go\>=1.21)](#go-function-extendedgo121)
+Cache decorators(concurrent): Similar to Python's `functools.cache` and `functools.lru_cache`. 
+
+In addition to memory caching, it also supports Redis caching and custom caching.
+
+- [🛠️ Go function extended](#️-go-function-extended)
   - [Decorator cases](#decorator-cases)
   - [Features](#features)
   - [Decorator examples](#decorator-examples)
@@ -24,6 +25,9 @@ TOC
     - [Cache function with more params(\>2)](#cache-function-with-more-params2)
     - [Cache function with lru cache](#cache-function-with-lru-cache)
     - [Cache function with redis cache](#cache-function-with-redis-cache)
+    - [Custom cache map](#custom-cache-map)
+  - [Decorator config](#decorator-config)
+    - [Config item(`gofnext.Config`)](#config-itemgofnextconfig)
     - [Hash Pointer address or value?](#hash-pointer-address-or-value)
     - [Custom hash key function](#custom-hash-key-function)
 
@@ -44,7 +48,7 @@ TOC
 ## Features
 - [x] Cache Decorator (gofnext)
     - [x] Decorator cache for function
-    - [x] Goroutine Safe
+    - [x] Concurrent goroutine Safe
     - [x] Support memory CacheMap(default)
     - [x] Support memory-lru CacheMap
     - [x] Support redis CacheMap
@@ -103,7 +107,6 @@ Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/exampl
             fmt.Println(userinfo, err)
         }, times)
     }
-
 
 ### Cache function with 1 param
 Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-nil_test.go)
@@ -266,6 +269,20 @@ Set redis config:
 		Addrs: []string{"localhost:6379"},
 	})
 
+### Custom cache map
+Refer to: https://github.com/ahuigo/gofnext/blob/main/cache-map-mem.go
+
+## Decorator config
+### Config item(`gofnext.Config`)
+gofnext.Config item list:
+
+| Key | Description      |
+|-----|------------------|
+| TTL    | Cache Time to Live |
+| CacheMap|Custom own cache |
+| SkipCacheIfErr | No cache if there is error |
+| HashKeyPointerAddr | Use Pointer Addr as key instead of its value when hashing key |
+| HashKeyFunc| Custom hash key function |
 
 ### Hash Pointer address or value?
 Decorator will hash all function's parameters into hashkey.

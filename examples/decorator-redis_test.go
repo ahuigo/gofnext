@@ -92,3 +92,29 @@ func TestRedisCacheFuncWithNoTTL(t *testing.T) {
 		t.Errorf("executeCount should be 3, but get %d", executeCount)
 	}
 }
+
+func TestRedisCacheFuncWithTTLTimeout(t *testing.T) {
+	// Original function
+	executeCount := 0
+	getUserScore := func(more int) (int, error) {
+		executeCount++
+		return 98 + more, nil
+	}
+
+	// Cacheable Function
+	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
+		TTL:      time.Millisecond * 200,
+		CacheMap: gofnext.NewCacheRedis("redis-cache-key").ClearAll(),
+	})
+
+	// Parallel invocation of multiple functions.
+	for i := 0; i < 5; i++ {//2+4=6 times
+		getUserScoreFromDbWithCache(1)
+		time.Sleep(time.Millisecond * 500)
+		getUserScoreFromDbWithCache(1)
+	}
+
+	if executeCount != 6 {
+		t.Errorf("executeCount should be 6, but get %d", executeCount)
+	}
+}

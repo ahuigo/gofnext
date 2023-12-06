@@ -1,8 +1,7 @@
 msg?=
 
-test: race
-	go test -coverprofile cover.out -coverpkg ".,./examples" -covermode=atomic -failfast ./...
-	go test -coverprofile cover.out -coverpkg "./..." -covermode=atomic -failfast ./...
+test: 
+	go test -race -coverprofile cover.out -coverpkg "./..." -failfast ./...
 cover: test
 	go tool cover -html=cover.out
 race: 
@@ -15,7 +14,7 @@ gitcheck:
 	if [[ "$(msg)" = "" ]] ; then echo "Usage: make pkg msg='commit msg'";exit 20; fi
 
 .ONESHELL:
-pkg: gitcheck test
+pkg: gitcheck test fmt
 	{ hash newversion.py 2>/dev/null && newversion.py version;} ;  { echo version `cat version`; }
 	git commit -am "$(msg)"
 	#jfrog "rt" "go-publish" "go-pl" $$(cat version) "--url=$$GOPROXY_API" --user=$$GOPROXY_USER --apikey=$$GOPROXY_PASS
