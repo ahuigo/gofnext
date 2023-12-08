@@ -28,7 +28,7 @@ func TestCacheFuncKeyStruct(t *testing.T) {
 		TTL: time.Hour,
 	})
 
-	// Parallel invocation of multiple functions.
+	// Execute the function multi times in parallel.
 	parallelCall(func() {
 		score, _ := getUserScoreFromDbWithCache(UserInfo{id: 1})
 		if score != 99 {
@@ -59,7 +59,7 @@ func TestCacheFuncKeyMap(t *testing.T) {
 		TTL: time.Hour,
 	})
 
-	// Parallel invocation of multiple functions.
+	// Execute the function multi times in parallel.
 	parallelCall(func() {
 		score, _ := getUserScoreFromDbWithCache(usermap{"id": 1})
 		if score != 99 {
@@ -92,7 +92,7 @@ func TestCacheFuncKeyDeepMap(t *testing.T) {
 		TTL: time.Hour,
 	})
 
-	// Parallel invocation of multiple functions.
+	// Execute the function multi times in parallel.
 	parallelCall(func() {
 		score, _ := getUserScoreFromDbWithCache(Params{m: map[string]int{"id": 1}})
 		if score != 99 {
@@ -126,7 +126,7 @@ func TestCacheFuncKeySlice(t *testing.T) {
 		TTL: time.Hour,
 	})
 
-	// Parallel invocation of multiple functions.
+	// Execute the function multi times in parallel.
 	parallelCall(func() {
 		score, _ := getUserScoreFromDbWithCache([]UserInfo{{id: 1}})
 		if score != 99 {
@@ -161,7 +161,7 @@ func TestCacheFuncKeyPointer(t *testing.T) {
 		TTL: time.Hour,
 	})
 
-	// Parallel invocation of multiple functions.
+	// Execute the function multi times in parallel.
 	parallelCall(func() {
 		score, _ := getUserScoreFromDbWithCache(&UserInfo{id: 1})
 		if score != 99 {
@@ -200,7 +200,7 @@ func TestCacheFuncKeyInnerPointer(t *testing.T) {
 		NeedDumpKey: true,
 	})
 
-	// Parallel invocation of multiple functions.
+	// Execute the function multi times in parallel.
 	parallelCall(func() {
 		score, _ := getUserScoreFromDbWithCache(ExtUserInfo{u: &UserInfo{id: 1}})
 		if score != 99 {

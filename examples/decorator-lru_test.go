@@ -24,7 +24,7 @@ func TestCacheFuncWithOneParamLRU(t *testing.T) {
 		CacheMap: gofnext.NewCacheLru(maxCacheSize),
 	})
 
-	// Parallel invocation of multiple functions.
+	// Execute the function multi times in parallel.
 	for i := 0; i < 10; i++ {
 		score, err := getUserScoreFromDbWithLruCache(1)
 		fmt.Println(score, err)

@@ -30,6 +30,14 @@ type cachedFn[K1 any, K2 any, V any] struct {
 	getFunc            func(K1, K2) (V, error)
 }
 
+func (c *cachedFn[K1, K2, V]) setConfigs(configs ...*Config) *cachedFn[K1, K2, V] {
+	if len(configs) > 0 {
+		return c.setConfig(configs[0])
+	} else {
+		return c.setConfig(nil)
+	}
+}
+
 func (c *cachedFn[K1, K2, V]) setConfig(config *Config) *cachedFn[K1, K2, V] {
 	// default value
 	if config == nil {
@@ -77,74 +85,74 @@ func (c *cachedFn[K1, K2, V]) setConfig(config *Config) *cachedFn[K1, K2, V] {
 // Cache Function with 2 parameter
 func CacheFn2Err[K1 any, K2 any, V any](
 	getFunc func(K1, K2) (V, error),
-	config *Config,
+	configs ...*Config,
 ) func(K1, K2) (V, error) {
 	ins := &cachedFn[K1, K2, V]{getFunc: getFunc, keyLen: 2}
-	ins.setConfig(config)
+	ins.setConfigs(configs...)
 	return ins.invoke2err
 }
 
 // Cache Function with 2 parameter
 func CacheFn2[K1 any, K2 any, V any](
 	getFunc func(K1, K2) V,
-	config *Config,
+	configs ...*Config,
 ) func(K1, K2) V {
 	getFunc0 := func(ctx K1, key K2) (V, error) {
 		return getFunc(ctx, key), nil
 	}
 	ins := &cachedFn[K1, K2, V]{getFunc: getFunc0, keyLen: 2}
-	ins.setConfig(config)
+	ins.setConfigs(configs...)
 	return ins.invoke2
 }
 
 // Cache Function with 1 parameter
 func CacheFn1Err[K any, V any](
 	getFunc func(K) (V, error),
-	config *Config,
+	configs ...*Config,
 ) func(K) (V, error) {
 	getFunc0 := func(ctx context.Context, key K) (V, error) {
 		return getFunc(key)
 	}
 	ins := &cachedFn[context.Context, K, V]{getFunc: getFunc0, keyLen: 1}
-	ins.setConfig(config)
+	ins.setConfigs(configs...)
 	return ins.invoke1
 }
 
 func CacheFn1[K any, V any](
 	getFunc func(K) V,
-	config *Config,
+	configs ...*Config,
 ) func(K) V {
 	getFunc0 := func(ctx context.Context, key K) (V, error) {
 		return getFunc(key), nil
 	}
 	ins := &cachedFn[context.Context, K, V]{getFunc: getFunc0, keyLen: 1}
-	ins.setConfig(config)
+	ins.setConfigs(configs...)
 	return ins.invoke1err
 }
 
 // Cache Function with 0 parameter
 func CacheFn0Err[V any](
 	getFunc func() (V, error),
-	config *Config,
+	configs ...*Config,
 ) func() (V, error) {
 	getFunc0 := func(ctx context.Context, i int8) (V, error) {
 		return getFunc()
 	}
 	ins := &cachedFn[context.Context, int8, V]{getFunc: getFunc0, keyLen: 0}
-	ins.setConfig(config)
+	ins.setConfigs(configs...)
 	return ins.invoke0err
 }
 
 // Cache Function with 0 parameter
 func CacheFn0[V any](
 	getFunc func() V,
-	config *Config,
+	configs ...*Config,
 ) func() V {
 	getFunc0 := func(ctx context.Context, i int8) (V, error) {
 		return getFunc(), nil
 	}
 	ins := &cachedFn[context.Context, int8, V]{getFunc: getFunc0, keyLen: 0}
-	ins.setConfig(config)
+	ins.setConfigs(configs...)
 	return ins.invoke0
 }
 
@@ -274,7 +282,7 @@ checkCache:
 	}
 
 	// 4. Execute getFunc(only once)
-	if !hasCache{
+	if !hasCache {
 		// 4.1 try lock
 		// If 100 goroutines call the same function at the same time,
 		// only one goroutine can execute the getFunc.

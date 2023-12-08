@@ -42,7 +42,7 @@ func TestRedisCacheFuncWithTTL(t *testing.T) {
 		CacheMap: gofnext.NewCacheRedis("redis-cache-key").ClearAll(),
 	})
 
-	// Parallel invocation of multiple functions.
+	// Execute the function multi times in parallel.
 	for i := 0; i < 10; i++ {
 		score, err := getUserScoreFromDbWithCache(1)
 		if err != nil || score != 99 {
@@ -77,7 +77,7 @@ func TestRedisCacheFuncWithNoTTL(t *testing.T) {
 		},
 	) // getFunc can only accept 1 parameter
 
-	// Parallel invocation of multiple functions.
+	// Execute the function multi times in parallel.
 	parallelCall(func() {
 		score, err := getUserScoreFromDbWithCache(1, true)
 		if err != nil || score != 99 {
@@ -107,8 +107,8 @@ func TestRedisCacheFuncWithTTLTimeout(t *testing.T) {
 		CacheMap: gofnext.NewCacheRedis("redis-cache-key").ClearAll(),
 	})
 
-	// Parallel invocation of multiple functions.
-	for i := 0; i < 5; i++ {//2+4=6 times
+	// Execute the function multi times in parallel.
+	for i := 0; i < 5; i++ { //2+4=6 times
 		getUserScoreFromDbWithCache(1)
 		time.Sleep(time.Millisecond * 500)
 		getUserScoreFromDbWithCache(1)

@@ -28,7 +28,7 @@ func TestCacheFuncWithNoParam(t *testing.T) {
 	getUserInfoFromDbWithCache := CacheFn0Err(getUserInfoFromDb, &Config{TTL: 400 * time.Millisecond}) // getFunc can only accept zero parameter
 	_ = getUserInfoFromDbWithCache
 
-	// Parallel invocation of multiple functions.
+	// Execute the function multi times in parallel.
 	parallelCall(func() {
 		userinfo, err := getUserInfoFromDbWithCache()
 		fmt.Println(userinfo, err)
@@ -72,7 +72,7 @@ func TestCacheFuncWith2Param(t *testing.T) {
 		TTL: time.Hour,
 	}) // getFunc can only accept 2 parameter
 
-	// Parallel invocation of multiple functions.
+	// Execute the function multi times in parallel.
 	ctx := context.Background()
 	parallelCall(func() {
 		score, _ := getUserScoreFromDbWithCache(ctx, map[int]int{0: 1})

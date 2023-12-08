@@ -27,7 +27,7 @@ func TestCacheFuncKeyPointerAddr(t *testing.T) {
 		HashKeyPointerAddr: true,
 	})
 
-	// Parallel invocation of multiple functions.
+	// Execute the function multi times in parallel.
 	parallelCall(func() {
 		score, _ := getUserScoreFromDbWithCache(&UserInfo{id: 1})
 		if score != 99 {
@@ -56,7 +56,7 @@ func TestCacheFuncKeyPointerCycle(t *testing.T) {
 	// Cacheable Function
 	getUserScoreCached := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{})
 
-	// Parallel invocation of multiple functions.
+	// Execute the function multi times in parallel.
 	u := &UserInfo{id: 1}
 	u.User = u
 	score, _ := getUserScoreCached(u)

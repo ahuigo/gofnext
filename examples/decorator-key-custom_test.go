@@ -36,7 +36,7 @@ func TestCacheFuncKeyCustom(t *testing.T) {
 		HashKeyFunc: hashKeyFunc,
 	})
 
-	// Parallel invocation of multiple functions.
+	// Execute the function multi times in parallel.
 	parallelCall(func() {
 		score, _ := getUserScoreFromDbWithCache(&UserInfo{id: 1}, true)
 		if score != 99 {

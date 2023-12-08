@@ -2,7 +2,6 @@ package examples
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -10,44 +9,58 @@ import (
 	"github.com/ahuigo/gofnext"
 )
 
-func getUser(age int) UserInfo {
+func getUser() UserInfo {
 	time.Sleep(10 * time.Millisecond)
-	return UserInfo{Name: "Alex", Age: age}
+	return UserInfo{Name: "Alex", Age: 20}
 }
 
 var (
 	// Cacheable Function with 1 param and no error
-	getUserInfoFromDb = gofnext.CacheFn1(getUser, nil)
+	getUserInfoFromDb = gofnext.CacheFn0(getUser)
 )
 
 func TestCacheFuncWith0Param(t *testing.T) {
-	// Parallel invocation of multiple functions.
-	times := 10
+	// Execute the function 10 times in parallel.
+	parallelCall(func() {
+		userinfo := getUserInfoFromDb()
+		fmt.Println(userinfo)
+	}, 10) //10 times
+}
+
+func TestCacheFuncWith1Param(t *testing.T) {
+	getUser := func(age int) UserInfo {
+		time.Sleep(10 * time.Millisecond)
+		return UserInfo{Name: "Alex", Age: age}
+	}
+
+	// cacheable function
+	getUserInfoFromDb := gofnext.CacheFn1(getUser)
+
 	parallelCall(func() {
 		userinfo := getUserInfoFromDb(20)
 		fmt.Println(userinfo)
-	}, times)
+	}, 10)
 }
 
 func TestCacheFuncWith2Params(t *testing.T) {
 	// Original function
 	executeCount := 0
-	getUserScore := func(c context.Context, id int) (int, error) {
+	getUserScore := func(c context.Context, id int) int {
 		executeCount++
 		fmt.Println("select score from db where id=", id, time.Now())
 		time.Sleep(10 * time.Millisecond)
-		return 98 + id, errors.New("db error")
+		return 98 + id
 	}
 
 	// Cacheable Function
-	getUserScoreFromDbWithCache := gofnext.CacheFn2Err(getUserScore, &gofnext.Config{
+	getUserScoreFromDbWithCache := gofnext.CacheFn2(getUserScore, &gofnext.Config{
 		TTL: time.Hour,
 	}) // getFunc can only accept 2 parameter
 
-	// Parallel invocation of multiple functions.
+	// Execute the function multi times in parallel.
 	ctx := context.Background()
 	parallelCall(func() {
-		score, _ := getUserScoreFromDbWithCache(ctx, 1)
+		score := getUserScoreFromDbWithCache(ctx, 1)
 		if score != 99 {
 			t.Errorf("score should be 99, but get %d", score)
 		}
@@ -87,9 +100,9 @@ func TestCacheFuncWithMoreParams(t *testing.T) {
 	}
 
 	// Cacheable Function
-	fnCached := gofnext.CacheFn1(fnWrap, nil)
+	fnCached := gofnext.CacheFn1(fnWrap)
 
-	// Parallel invocation of multiple functions.
+	// Execute the function multi times in parallel.
 	parallelCall(func() {
 		score := fnCached(Stu{"Alex", 20, 1})
 		if score != 10 {

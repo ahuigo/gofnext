@@ -33,7 +33,7 @@ func TestRedisCacheFuncErr(t *testing.T) {
 		CacheMap: gofnext.NewCacheRedis("redis-cache-key").ClearAll(),
 	})
 
-	// Parallel invocation of multiple functions.
+	// Execute the function multi times in parallel.
 	for i := 0; i < 10; i++ {
 		score, err := getUserScoreFromDbWithCache(1)
 		if err == nil {

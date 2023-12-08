@@ -1,93 +1,93 @@
 # 🛠️ Go function extended
-[![tag](https://img.shields.io/github/tag/ahuigo/gofnext.svg)](https://github.com/ahuigo/gofnext/tags)
-![Go Version](https://img.shields.io/badge/Go-%3E%3D%201.21-%23007d9c)
+[![标签](https://img.shields.io/github/tag/ahuigo/gofnext.svg)](https://github.com/ahuigo/gofnext/tags)
+![Go 版本](https://img.shields.io/badge/Go-%3E%3D%201.21-%23007d9c)
 [![GoDoc](https://godoc.org/github.com/ahuigo/gofnext?status.svg)](https://pkg.go.dev/github.com/ahuigo/gofnext)
-![Build Status](https://github.com/ahuigo/gofnext/actions/workflows/test.yml/badge.svg)
-[![Go report](https://goreportcard.com/badge/github.com/ahuigo/gofnext)](https://goreportcard.com/report/github.com/ahuigo/gofnext)
-[![Coverage](https://img.shields.io/codecov/c/github/ahuigo/gofnext)](https://codecov.io/gh/ahuigo/gofnext)
-[![Contributors](https://img.shields.io/github/contributors/ahuigo/gofnext)](https://github.com/ahuigo/gofnext/graphs/contributors)
-[![License](https://img.shields.io/github/license/ahuigo/gofnext)](./LICENSE)
+![构建状态](https://github.com/ahuigo/gofnext/actions/workflows/test.yml/badge.svg)
+[![Go 报告](https://goreportcard.com/badge/github.com/ahuigo/gofnext)](https://goreportcard.com/report/github.com/ahuigo/gofnext)
+[![覆盖率](https://img.shields.io/codecov/c/github/ahuigo/gofnext)](https://codecov.io/gh/ahuigo/gofnext)
+[![贡献者](https://img.shields.io/github/contributors/ahuigo/gofnext)](https://github.com/ahuigo/gofnext/graphs/contributors)
+[![许可证](https://img.shields.io/github/license/ahuigo/gofnext)](./LICENSE)
 
-This **gofnext** provides the following functions extended(go>=1.21).
+这个 **gofnext** 提供以下函数扩展（go>=1.21）。
 
-Cache decorators(concurrent safe): Similar to Python's `functools.cache` and `functools.lru_cache`. 
-
-In addition to memory caching, it also supports Redis caching and custom caching.
-
-[简体中文](/ahuigo/gofnext/blob/main/readme.zh.md)
+缓存装饰器（并发安全）：类似于 Python 的 `functools.cache` 和 `functools.lru_cache`。除了内存缓存，它也支持 Redis 缓存和自定义缓存。
 
 - [🛠️ Go function extended](#️-go-function-extended)
-  - [Decorator cases](#decorator-cases)
-  - [Features](#features)
-  - [Decorator examples](#decorator-examples)
-    - [Cache fibonacii function](#cache-fibonacii-function)
-    - [Cache function with 0 param](#cache-function-with-0-param)
-    - [Cache function with 1 param](#cache-function-with-1-param)
-    - [Cache function with 2 params](#cache-function-with-2-params)
-    - [Cache function with more params(\>2)](#cache-function-with-more-params2)
-    - [Cache function with lru cache](#cache-function-with-lru-cache)
-    - [Cache function with redis cache](#cache-function-with-redis-cache)
-    - [Custom cache map](#custom-cache-map)
-  - [Decorator config](#decorator-config)
-    - [Config item(`gofnext.Config`)](#config-itemgofnextconfig)
-    - [Cache Timeout](#cache-timeout)
-    - [Do not cache if there is an error](#do-not-cache-if-there-is-an-error)
-    - [Hash Pointer address or value?](#hash-pointer-address-or-value)
-    - [Custom hash key function](#custom-hash-key-function)
+  - [装饰器cases](#装饰器cases)
+  - [特性](#特性)
+  - [装饰器示例](#装饰器示例)
+    - [缓存斐波那契函数](#缓存斐波那契函数)
+    - [带有0个参数的缓存函数](#带有0个参数的缓存函数)
+    - [带有1个参数的缓存函数](#带有1个参数的缓存函数)
+    - [带有2个参数的缓存函数](#带有2个参数的缓存函数)
+    - [带有2个以上参数的缓存函数](#带有2个以上参数的缓存函数)
+    - [带LRU 缓存的函数](#带lru-缓存的函数)
+    - [带redis缓存的函数](#带redis缓存的函数)
+    - [定制缓存函数](#定制缓存函数)
+  - [装饰器配置](#装饰器配置)
+    - [配置项清单(`gofnext.Config`)](#配置项清单gofnextconfig)
+    - [缓存时间](#缓存时间)
+    - [如果有error就不缓存](#如果有error就不缓存)
+    - [哈希指针地址还是值？](#哈希指针地址还是值)
+    - [自定义哈希键函数](#自定义哈希键函数)
   - [Roadmap](#roadmap)
 
-## Decorator cases
+[Egnlish](/)/[中文]()
 
-| function        | decorator             |
-|-----------------|-----------------------|
-| func f() res    | gofnext.CacheFn0(f) |
-| func f(a) res   | gofnext.CacheFn1(f) |
-| func f(a,b) res | gofnext.CacheFn2(f) |
-| func f() (res,err)    | gofnext.CacheFn0Err(f) |
-| func f(a) (res,err)   | gofnext.CacheFn1Err(f)    |
-| func f(a,b) (res,err) | gofnext.CacheFn2Err(f)    |
-| func f() (res,err) | gofnext.CacheFn0Err(f, &gofnext.Config{TTL: time.Hour})<br/>// memory cache with ttl  |
-| func f() (res) | gofnext.CacheFn0(f, &gofnext.Config{CacheMap: gofnext.NewCacheLru(9999)})  <br/>// Maxsize of cache is 9999|
-| func f() (res) | gofnext.CacheFn0(f, &gofnext.Config{CacheMap: gofnext.NewCacheRedis("cacheKey")})  <br/>// Warning: redis's marshaling may result in data loss|
+## 装饰器cases
 
-## Features
-- [x] Cache Decorator (gofnext)
-    - [x] Decorator cache for function
-    - [x] Concurrent goroutine Safe
-    - [x] Support memory CacheMap(default)
-    - [x] Support memory-lru CacheMap
-    - [x] Support redis CacheMap
-    - [x] Support customization of the CacheMap(manually)
+| 函数             | 装饰器                      |
+|------------------|-----------------------------|
+| func f() res     | gofnext.CacheFn0(f)         |
+| func f(a) res    | gofnext.CacheFn1(f)         |
+| func f(a,b) res  | gofnext.CacheFn2(f)         |
+| func f() (res,err)     | gofnext.CacheFn0Err(f)      |
+| func f(a) (res,err)    | gofnext.CacheFn1Err(f)      |
+| func f(a,b) (res,err)  | gofnext.CacheFn2Err(f)      |
+| func f() (res,err) | gofnext.CacheFn0Err(f, &gofnext.Config{TTL: time.Hour})<br/>// 带有 ttl 的内存缓存  |
+| func f() (res) | gofnext.CacheFn0(f, &gofnext.Config{CacheMap: gofnext.NewCacheLru(9999)})  <br/>// 缓存的最大大小为 9999|
+| func f() (res) | gofnext.CacheFn0(f, &gofnext.Config{CacheMap: gofnext.NewCacheRedis("cacheKey")})  <br/>// 警告：redis 的序列化可能会导致数据丢失|
 
-## Decorator examples
-Refer to: [examples](https://github.com/ahuigo/gofnext/blob/main/examples)
+## 特性
+- [x] 缓存装饰器 (gofnext)
+    - [x] 函数的装饰器缓存
+    - [x] 并发协程安全
+    - [x] 支持内存 CacheMap（默认）
+    - [x] 支持内存-LRU CacheMap
+    - [x] 支持 redis CacheMap
+    - [x] 手动支持自定义 CacheMap
 
-### Cache fibonacii function
-Refer to: [decorator fib example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-fib_test.go)
+## 装饰器示例
+参考：[示例](https://github.com/ahuigo/gofnext/blob/main/examples)
 
-    package main
-    import "fmt"
-    import "github.com/ahuigo/gofnext"
-    func main() {
-        var fib func(int) int
-        var fibCached func(int) int
-        fib = func(x int) int {
-            fmt.Printf("call arg:%d\n", x)
-            if x <= 1 {
-                return x
-            } else {
-                return fibCached(x-1) + fibCached(x-2)
-            }
+### 缓存斐波那契函数
+参考：[装饰器斐波那契示例](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-fib_test.go)
+
+```go
+package main
+import "fmt"
+import "github.com/ahuigo/gofnext"
+func main() {
+    var fib func(int) int
+    var fibCached func(int) int
+    fib = func(x int) int {
+        fmt.Printf("call arg:%d\n", x)
+        if x <= 1 {
+            return x
+        } else {
+            return fibCached(x-1) + fibCached(x-2)
         }
-
-        fibCached = gofnext.CacheFn1(fib)    
-
-        fmt.Println(fibCached(5))
-        fmt.Println(fibCached(6))
     }
 
-### Cache function with 0 param
-Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator_test.go)
+    fibCached = gofnext.CacheFn1(fib)    
+
+    fmt.Println(fibCached(5))
+    fmt.Println(fibCached(6))
+}
+```
+
+### 带有0个参数的缓存函数
+参考: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator_test.go)
 
     package examples
 
@@ -113,8 +113,8 @@ Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/exampl
         }, times)
     }
 
-### Cache function with 1 param
-Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-nil_test.go)
+### 带有1个参数的缓存函数
+参考: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-nil_test.go)
 
     func getUserNoError(age int) (UserInfo) {
     	time.Sleep(10 * time.Millisecond)
@@ -135,8 +135,8 @@ Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/exampl
     	}, times)
     }
 
-### Cache function with 2 params
-> Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator_test.go)
+### 带有2个参数的缓存函数
+> 参考: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator_test.go)
 
     func TestCacheFuncWith2Param(t *testing.T) {
         // Original function
@@ -169,8 +169,8 @@ Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/exampl
         }
     }
 
-### Cache function with more params(>2)
-Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator_test.go)
+### 带有2个以上参数的缓存函数
+参考: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator_test.go)
 
 	executeCount := 0
 	type Stu struct {
@@ -213,8 +213,8 @@ Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/exampl
 		t.Errorf("executeCount should be 2, but get %d", executeCount)
 	}
 
-### Cache function with lru cache
-Refer to: [decorator lru example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-lru_test.go)
+### 带LRU 缓存的函数
+参考: [decorator lru example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-lru_test.go)
 
 	executeCount := 0
 	maxCacheSize := 2
@@ -229,10 +229,10 @@ Refer to: [decorator lru example](https://github.com/ahuigo/gofnext/blob/main/ex
 		CacheMap: gofnext.NewCacheLru(maxCacheSize),
 	})
 
-### Cache function with redis cache
+### 带redis缓存的函数
 > Warning: Since redis needs JSON marshaling, this may result in data loss.
 
-Refer to: [decorator redis example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-redis_test.go)
+参考: [decorator redis example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-redis_test.go)
 
     var (
         // Cacheable Function
@@ -274,12 +274,12 @@ Set redis config:
 		Addrs: []string{"localhost:6379"},
 	})
 
-### Custom cache map
-Refer to: https://github.com/ahuigo/gofnext/blob/main/cache-map-mem.go
+### 定制缓存函数
+参考: https://github.com/ahuigo/gofnext/blob/main/cache-map-mem.go
 
-## Decorator config
-### Config item(`gofnext.Config`)
-gofnext.Config item list:
+## 装饰器配置
+### 配置项清单(`gofnext.Config`)
+gofnext.Config 清单:
 
 | Key | Description      |
 |-----|------------------|
@@ -289,35 +289,35 @@ gofnext.Config item list:
 | HashKeyPointerAddr | Use Pointer Addr as key instead of its value when hashing key |
 | HashKeyFunc| Custom hash key function |
 
-### Cache Timeout
+### 缓存时间
 e.g.
 
     gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
         TTL:  time.Hour,
     }) 
 
-### Do not cache if there is an error
-> By default, gofnext will cache error even if there is an error.
+### 如果有error就不缓存
+> 默认有error 也会缓存.
 
-Refer to: https://github.com/ahuigo/gofnext/blob/main/examples/decorator-err_test.go
+参考: https://github.com/ahuigo/gofnext/blob/main/examples/decorator-err_test.go
 
     gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
         SkipCacheIfErr: true,
     }) 
 
-### Hash Pointer address or value?
-Decorator will hash function's all parameters into hashkey.
-By default, if parameter is pointer, decorator will hash its real value instead of pointer address.
+### 哈希指针地址还是值？
+> 装饰器将函数的所有参数哈希成哈希键（hashkey）。 默认情况下，如果参数是指针，装饰器将哈希其实际值而不是指针地址。
 
-If you wanna hash pointer address, you should turn on `HashKeyPointerAddr`:
+如果您想要哈希指针地址，您应该打开 `HashKeyPointerAddr` 选项：
 
 	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
 		HashKeyPointerAddr: true,
 	})
 
-### Custom hash key function
-> In this case, you need to ensure that duplicate keys are not generated.
-Refer to: [example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-key-custom_test.go)
+### 自定义哈希键函数
+> 这种情况下，您需要保证不会有生成重复的key。
+
+参考: [example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-key-custom_test.go)
 
 	// hash key function
 	hashKeyFunc := func(keys ...any) []byte{
@@ -332,4 +332,4 @@ Refer to: [example](https://github.com/ahuigo/gofnext/blob/main/examples/decorat
 	})
 
 ## Roadmap
-- [] Include private property when serialization for redis
+- [] Redis CacheMap 支持序列化所有私有属性
