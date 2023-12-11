@@ -1,11 +1,9 @@
-package examples
+package object
 
 import (
 	"encoding/json"
 	"fmt"
 	"testing"
-
-	"github.com/ahuigo/gofnext/object"
 )
 
 func TestConvertMapBytes(t *testing.T) {
@@ -16,7 +14,7 @@ func TestConvertMapBytes(t *testing.T) {
 	out, _ := json.Marshal(objBytes)
 	fmt.Println(string(out)) //output: {"k1":"djE=","k2":"djI="}
 
-	objString := object.ConvertObjectByte2String(objBytes)
+	objString := ConvertObjectByte2String(objBytes)
 	out, _ = json.Marshal(objString)
 	fmt.Println(string(out)) //output: {"k1":"v1","k2":"v2"}
 
@@ -35,7 +33,7 @@ func TestConvertOmitEmpty(t *testing.T) {
 	obj := HistoryEvent{
 		EventId: &i,
 	}
-	if out, err := json.Marshal(object.ConvertObjectByte2String(obj)); err != nil {
+	if out, err := json.Marshal(ConvertObjectByte2String(obj)); err != nil {
 		t.Fatal(err)
 	} else {
 		expectedOut := `{"eventId":1}`
