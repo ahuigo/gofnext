@@ -26,7 +26,7 @@ In addition to memory caching, it also supports Redis caching and custom caching
     - [Cache function with 2 params](#cache-function-with-2-params)
     - [Cache function with more params(\>2)](#cache-function-with-more-params2)
     - [Cache function with lru cache](#cache-function-with-lru-cache)
-    - [Cache function with redis cache](#cache-function-with-redis-cache)
+    - [Cache function with redis cache(unstable)](#cache-function-with-redis-cacheunstable)
     - [Custom cache map](#custom-cache-map)
   - [Decorator config](#decorator-config)
     - [Config item(`gofnext.Config`)](#config-itemgofnextconfig)
