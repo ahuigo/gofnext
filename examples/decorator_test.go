@@ -100,18 +100,22 @@ func TestCacheFuncWithMoreParams(t *testing.T) {
 	}
 
 	// Cacheable Function
-	fnCached := gofnext.CacheFn1(fnWrap)
+	fnCachedInner := gofnext.CacheFn1(fnWrap)
+	fnCached := func(name string, age, gender int) int {
+		return fnCachedInner(Stu{name, age, gender})
+	}
 
 	// Execute the function multi times in parallel.
 	parallelCall(func() {
-		score := fnCached(Stu{"Alex", 20, 1})
+		score := fnCached("Alex", 20, 1)
 		if score != 10 {
 			t.Errorf("score should be 10, but get %d", score)
 		}
-		fnCached(Stu{"Jhon", 21, 0})
-		fnCached(Stu{"Alex", 20, 1})
+		fnCached("Jhon", 21, 0)
+		fnCached("Alex", 20, 1)
 	}, 10)
 
+	// Test count
 	if executeCount != 2 {
 		t.Errorf("executeCount should be 2, but get %d", executeCount)
 	}
