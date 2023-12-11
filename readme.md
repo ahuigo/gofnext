@@ -14,7 +14,7 @@ Cache decorators(concurrent safe): Similar to Python's `functools.cache` and `fu
 
 In addition to memory caching, it also supports Redis caching and custom caching.
 
-[简体中文](/ahuigo/gofnext/blob/main/readme.zh.md)
+[简体中文](/readme.zh.md)
 
 - [🛠️ Go function extended](#️-go-function-extended)
   - [Decorator cases](#decorator-cases)
@@ -229,7 +229,7 @@ Refer to: [decorator lru example](https://github.com/ahuigo/gofnext/blob/main/ex
 		CacheMap: gofnext.NewCacheLru(maxCacheSize),
 	})
 
-### Cache function with redis cache
+### Cache function with redis cache(unstable)
 > Warning: Since redis needs JSON marshaling, this may result in data loss.
 
 Refer to: [decorator redis example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-redis_test.go)

@@ -229,8 +229,9 @@ func main() {
 		CacheMap: gofnext.NewCacheLru(maxCacheSize),
 	})
 
-### 带redis缓存的函数
-> Warning: Since redis needs JSON marshaling, this may result in data loss.
+### 带redis缓存的函数(unstable)
+> 警告: 目前使用json序列化,可能会有私有属性丢失
+> 后续序列化方法可能会有变化, 请不要用于生产
 
 参考: [decorator redis example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-redis_test.go)
 
