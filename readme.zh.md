@@ -304,7 +304,7 @@ e.g.
 ### 如果有error就不缓存
 > 默认有error 也会缓存.
 
-参考: https://github.com/ahuigo/gofnext/blob/main/examples/decorator-err_test.go
+如果存在error时, 不想缓存话。 参考: https://github.com/ahuigo/gofnext/blob/main/examples/decorator-err_test.go
 
     gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
         SkipCacheIfErr: true,

@@ -301,8 +301,9 @@ e.g.
     }) 
 
 ### Do not cache if there is an error
-> By default, gofnext will cache error even if there is an error.
+> By default, gofnext will cache error when there is an error.
 
+To skip cache when there is an **error**, just add `SkipCacheIfErr: true`.
 Refer to: https://github.com/ahuigo/gofnext/blob/main/examples/decorator-err_test.go
 
     gofnext.CacheFn1Err(getUserScore, &gofnext.Config{

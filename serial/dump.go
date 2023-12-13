@@ -37,27 +37,41 @@ func Bytes(val any, hashPtrAddr bool) []byte {
 
 func dump(refV reflect.Value, hashPtrAddr bool, ps PtrSeen) []byte {
 	var buf bytes.Buffer
+
 	switch refV.Kind() {
 	case reflect.Invalid:
 		buf.WriteString("<invalid>")
 	case reflect.String:
-		dumpString(refV, &buf)
+		buf.WriteString(`"`)
+		buf.WriteString(refV.String())
+		buf.WriteString(`"`)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		dumpInt(refV, &buf)
+		buf.WriteString(fmt.Sprintf("%d", refV.Int()))
+	// refV.CanInt()
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		dumpUint(refV, &buf)
+		buf.WriteString(fmt.Sprintf("%d", refV.Uint()))
 	case reflect.Float32, reflect.Float64:
-		dumpFloat(refV, &buf)
+		buf.WriteString(fmt.Sprintf("%f", refV.Float()))
 	case reflect.Complex64, reflect.Complex128:
-		dumpComplex(refV, &buf)
+		buf.WriteString(fmt.Sprintf("%f", refV.Complex()))
 	case reflect.Ptr, reflect.Interface:
-		dumpPtrInterface(refV, hashPtrAddr, ps, &buf)
-	case reflect.Slice, reflect.Array:
-		dumpSliceArray(refV, hashPtrAddr, ps, &buf)
-	case reflect.Struct:
-		dumpStruct(refV, hashPtrAddr, ps, &buf)
+		dumpPtrInterface(refV, hashPtrAddr, &buf, ps)
+	case reflect.Slice:
+		if !hashPtrAddr && !ps.Add(refV) {
+			buf.WriteString("<cycle slice>")
+			break
+		}
+		fallthrough
+	case reflect.Array:
+		dumpSliceArray(refV, hashPtrAddr, &buf, ps)
 	case reflect.Map:
-		dumpMap(refV, hashPtrAddr, ps, &buf)
+		if !hashPtrAddr && !ps.Add(refV) {
+			buf.WriteString("<cycle map>")
+			break
+		}
+		dumpMap(refV, hashPtrAddr, &buf, ps)
+	case reflect.Struct:
+		dumpStruct(refV, hashPtrAddr, &buf, ps)
 	case reflect.Func:
 		buf.WriteString("<func>")
 	case reflect.Chan:
@@ -72,34 +86,11 @@ func dump(refV reflect.Value, hashPtrAddr bool, ps PtrSeen) []byte {
 	return buf.Bytes()
 }
 
-func dumpString(refV reflect.Value, buf *bytes.Buffer) {
-	buf.WriteString(`"`)
-	buf.WriteString(refV.String())
-	buf.WriteString(`"`)
-}
-
-func dumpInt(refV reflect.Value, buf *bytes.Buffer) {
-	buf.WriteString(fmt.Sprintf("%d", refV.Int()))
-}
-
-func dumpUint(refV reflect.Value, buf *bytes.Buffer) {
-	buf.WriteString(fmt.Sprintf("%d", refV.Uint()))
-}
-
-func dumpFloat(refV reflect.Value, buf *bytes.Buffer) {
-	buf.WriteString(fmt.Sprintf("%f", refV.Float()))
-}
-
-func dumpComplex(refV reflect.Value, buf *bytes.Buffer) {
-	buf.WriteString(fmt.Sprintf("%f", refV.Complex()))
-}
-
-func dumpPtrInterface(refV reflect.Value, hashPtrAddr bool, ps PtrSeen, buf *bytes.Buffer) {
+func dumpPtrInterface(refV reflect.Value, hashPtrAddr bool, buf *bytes.Buffer, ps PtrSeen) {
 	if refV.IsNil() {
 		buf.WriteString("null")
 		return
 	}
-
 	isPtr := refV.Kind() == reflect.Ptr
 	if isPtr && !ps.Add(refV) {
 		buf.WriteString("<cycle pointer>")
@@ -114,7 +105,7 @@ func dumpPtrInterface(refV reflect.Value, hashPtrAddr bool, ps PtrSeen, buf *byt
 	}
 }
 
-func dumpSliceArray(refV reflect.Value, hashPtrAddr bool, ps PtrSeen, buf *bytes.Buffer) {
+func dumpSliceArray(refV reflect.Value, hashPtrAddr bool, buf *bytes.Buffer, ps PtrSeen) {
 	buf.WriteString("[")
 	for i := 0; i < refV.Len(); i++ {
 		buf.Write(dump(refV.Index(i), hashPtrAddr, ps))
@@ -125,7 +116,7 @@ func dumpSliceArray(refV reflect.Value, hashPtrAddr bool, ps PtrSeen, buf *bytes
 	buf.WriteString("]")
 }
 
-func dumpStruct(refV reflect.Value, hashPtrAddr bool, ps PtrSeen, buf *bytes.Buffer) {
+func dumpStruct(refV reflect.Value, hashPtrAddr bool, buf *bytes.Buffer, ps PtrSeen) {
 	name := refV.Type().Name()
 	buf.WriteString(name + "{")
 	for i := 0; i < refV.NumField(); i++ {
@@ -139,7 +130,7 @@ func dumpStruct(refV reflect.Value, hashPtrAddr bool, ps PtrSeen, buf *bytes.Buf
 	buf.WriteString("}")
 }
 
-func dumpMap(refV reflect.Value, hashPtrAddr bool, ps PtrSeen, buf *bytes.Buffer) {
+func dumpMap(refV reflect.Value, hashPtrAddr bool, buf *bytes.Buffer, ps PtrSeen) {
 	sli := make([][]byte, len(refV.MapKeys()))
 	for i, key := range refV.MapKeys() {
 		keyVal := append(dump(key, hashPtrAddr, ps), ':')

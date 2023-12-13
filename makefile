@@ -21,3 +21,5 @@ pkg: gitcheck test fmt
 	v=`cat version` && git tag "$$v" && git push origin "$$v" && git push origin HEAD
 pkg0: test
 	v=`cat version` && git tag "$$v" && git push origin "$$v" && git push origin HEAD
+report:
+	goreportcard-cli -v

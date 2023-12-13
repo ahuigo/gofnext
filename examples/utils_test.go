@@ -1,6 +1,10 @@
 package examples
 
-import "sync"
+import (
+	"strings"
+	"sync"
+	"testing"
+)
 
 // Parallel caller via goroutines
 func parallelCall(fn func(), times int) {
@@ -13,4 +17,10 @@ func parallelCall(fn func(), times int) {
 		}()
 	}
 	wg.Wait()
+}
+
+func assertContains(t *testing.T, s string, search string) {
+	if !strings.Contains(s, search) {
+		t.Fatalf("%s should contains %s", s, search)
+	}
 }

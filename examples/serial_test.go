@@ -9,8 +9,29 @@ import (
 )
 
 type Person struct {
-	Name string
-	age  *int //private
+	Name     string
+	age      *int //private
+	children []Person
+}
+
+func TestDumpCycleSlice(t *testing.T) {
+	person := Person{
+		children: []Person{{}},
+	}
+	person.children[0].children = []Person{person}
+	result := serial.String(&person, false)
+	assertContains(t, result, `<cycle slice>`)
+}
+
+func TestDumpCycleMap(t *testing.T) {
+	m := map[string]any{}
+	m["k1"] = map[string]any{
+		"k2": m,
+	}
+	result := serial.String(&m, false)
+	assertContains(t, result, `<cycle map>`)
+	assertContains(t, result, `&{"k1":`)
+	t.Log(result)
 }
 
 func TestDumpStringPtr(t *testing.T) {
@@ -39,14 +60,14 @@ func TestDumpString(t *testing.T) {
 	// Test case 3: Struct
 	age := 30
 	person := Person{Name: "John Doe", age: &age}
-	expectedPerson := `Person{Name:"John Doe",age:&30}`
+	expectedPerson := `Person{Name:"John Doe",age:&30,children:[]}`
 	if result := serial.String(person, false); result != expectedPerson {
 		t.Errorf("Expected %s, but got %s", expectedPerson, result)
 	}
 
 	// Test case 7: pointer
 	p := &person
-	expectedP := "&Person{Name:\"John Doe\",age:&30}"
+	expectedP := "&Person{Name:\"John Doe\",age:&30,children:[]}"
 	if result := serial.String(p, false); result != expectedP {
 		t.Errorf("Expected %s, but got %s", expectedP, result)
 	}
