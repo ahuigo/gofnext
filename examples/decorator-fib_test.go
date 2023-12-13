@@ -9,19 +9,22 @@ import (
 
 // https://stackoverflow.com/questions/73379188/how-to-use-cache-decorator-with-a-recursive-function-in-go
 func TestFib(t *testing.T) {
+	excuteCount := 0
 	var fib func(int) int
-	var fibCached func(int) int
 	fib = func(x int) int {
+		excuteCount++
 		fmt.Printf("call arg:%d\n", x)
 		if x <= 1 {
 			return x
 		} else {
-			return fibCached(x-1) + fibCached(x-2)
+			return fib(x-1) + fib(x-2)
 		}
 	}
+	fib = gofnext.CacheFn1(fib)
 
-	fibCached = gofnext.CacheFn1(fib, nil)
-
-	fmt.Println(fibCached(5))
-	fmt.Println(fibCached(6))
+	fmt.Println(fib(5))
+	fmt.Println(fib(6))
+	if excuteCount != 7 {
+		t.Errorf("Expected 7, but got %d", excuteCount)
+	}
 }

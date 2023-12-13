@@ -1,7 +1,6 @@
 package examples
 
 import (
-	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -15,7 +14,7 @@ func TestCacheFuncWithOneParamLRU(t *testing.T) {
 	maxCacheSize := 2
 	var getUserScore = func(more int) (int, error) {
 		executeCount++
-		return 98 + more, errors.New("db error")
+		return 98 + more, nil
 	}
 
 	// Cacheable Function

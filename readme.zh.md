@@ -69,20 +69,18 @@ import "fmt"
 import "github.com/ahuigo/gofnext"
 func main() {
     var fib func(int) int
-    var fibCached func(int) int
     fib = func(x int) int {
         fmt.Printf("call arg:%d\n", x)
         if x <= 1 {
             return x
         } else {
-            return fibCached(x-1) + fibCached(x-2)
+            return fib(x-1) + fib(x-2)
         }
     }
+    fib = gofnext.CacheFn1(fib)
 
-    fibCached = gofnext.CacheFn1(fib)    
-
-    fmt.Println(fibCached(5))
-    fmt.Println(fibCached(6))
+    fmt.Println(fib(5))
+    fmt.Println(fib(6))
 }
 ```
 
@@ -286,13 +284,13 @@ Set redis config:
 ### 配置项清单(`gofnext.Config`)
 gofnext.Config 清单:
 
-| Key | Description      |
+| 键 | 描述|
 |-----|------------------|
-| TTL    | Cache Time to Live |
-| CacheMap|Custom own cache |
-| SkipCacheIfErr | No cache if there is an error |
-| HashKeyPointerAddr | Use Pointer Addr as key instead of its value when hashing key |
-| HashKeyFunc| Custom hash key function |
+| TTL    | 缓存时间 |
+| CacheMap| 自定义缓存map |
+| NeedCacheIfErr | 如果调用存在error，也要使用缓存 |
+| HashKeyPointerAddr | 哈希键时，用指针本身地址，而不是指针的值 |
+| HashKeyFunc| 自定义哈希键函数 |
 
 ### 缓存时间
 e.g.
@@ -302,12 +300,12 @@ e.g.
     }) 
 
 ### 如果有error就不缓存
-> 默认有error 也会缓存.
+> 默认有error 不会缓存.
 
-如果存在error时, 不想缓存话。 参考: https://github.com/ahuigo/gofnext/blob/main/examples/decorator-err_test.go
+如果存在error时, 也使用缓存话。 参考: https://github.com/ahuigo/gofnext/blob/main/examples/decorator-err_test.go
 
     gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
-        SkipCacheIfErr: true,
+        NeedCacheIfErr: true,
     }) 
 
 ### 哈希指针地址还是值？

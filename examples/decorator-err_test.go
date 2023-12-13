@@ -35,7 +35,7 @@ func TestCacheFunc0WithErr(t *testing.T) {
 	}, times)
 }
 
-func TestCacheFunc0SkipErr(t *testing.T) {
+func TestCacheFunc0CacheErr(t *testing.T) {
 	count := atomic.Uint32{}
 	getUserAndErr := func(age int) (UserInfo, error) {
 		count.Add(1)
@@ -46,18 +46,17 @@ func TestCacheFunc0SkipErr(t *testing.T) {
 	}
 	// Cacheable Function
 	getUserAndErrCached := gofnext.CacheFn1Err(getUserAndErr, &gofnext.Config{
-		SkipCacheIfErr: true,
+		NeedCacheIfErr: true,
 	})
 
 	times := 5
 	parallelCall(func() {
-		_, err := getUserAndErrCached(0) //5 times
+		_, err := getUserAndErrCached(0) //1 times
 		if err == nil {
 			t.Error("should be error, but get nil")
 		}
-		getUserAndErrCached(20) //1 times
 	}, times)
-	if count.Load() != 6 {
-		t.Errorf("Execute count should be 6, but get %d", count.Load())
+	if count.Load() != 1 {
+		t.Errorf("Execute count should be 1, but get %d", count.Load())
 	}
 }

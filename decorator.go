@@ -14,14 +14,14 @@ type Config struct {
 	TTL                time.Duration
 	CacheMap           CacheMap
 	NeedDumpKey        bool
-	SkipCacheIfErr     bool
+	NeedCacheIfErr     bool
 	HashKeyPointerAddr bool
 	HashKeyFunc        func(args ...any) []byte
 }
 
 type cachedFn[K1 any, K2 any, V any] struct {
 	needDumpKey        bool
-	skipCacheIfErr     bool
+	needCacheIfErr     bool
 	hashKeyPointerAddr bool
 	hashKeyFunc        func(args ...any) []byte
 	cacheMap           CacheMap
@@ -50,7 +50,7 @@ func (c *cachedFn[K1, K2, V]) setConfig(config *Config) *cachedFn[K1, K2, V] {
 	// init value
 	c.hashKeyPointerAddr = config.HashKeyPointerAddr
 	c.needDumpKey = config.NeedDumpKey
-	c.skipCacheIfErr = config.SkipCacheIfErr
+	c.needCacheIfErr = config.NeedCacheIfErr
 	c.cacheMap = config.CacheMap
 	if config.TTL > 0 {
 		c.cacheMap.SetTTL(config.TTL)
@@ -270,7 +270,7 @@ checkCache:
 	pkeyLock.RUnlock()
 
 	// 3.1 check if marshal needed
-	if shouldSkipCache := c.skipCacheIfErr && err != nil; shouldSkipCache {
+	if shouldSkipCache := err != nil && !c.needCacheIfErr; shouldSkipCache {
 		hasCache = false
 	}
 	if hasCache && c.cacheMap.NeedMarshal() {

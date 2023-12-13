@@ -65,26 +65,26 @@ Refer to: [examples](https://github.com/ahuigo/gofnext/blob/main/examples)
 ### Cache fibonacii function
 Refer to: [decorator fib example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-fib_test.go)
 
-    package main
-    import "fmt"
-    import "github.com/ahuigo/gofnext"
-    func main() {
-        var fib func(int) int
-        var fibCached func(int) int
-        fib = func(x int) int {
-            fmt.Printf("call arg:%d\n", x)
-            if x <= 1 {
-                return x
-            } else {
-                return fibCached(x-1) + fibCached(x-2)
-            }
+```go
+package main
+import "fmt"
+import "github.com/ahuigo/gofnext"
+func main() {
+    var fib func(int) int
+    fib = func(x int) int {
+        fmt.Printf("call arg:%d\n", x)
+        if x <= 1 {
+            return x
+        } else {
+            return fib(x-1) + fib(x-2)
         }
-
-        fibCached = gofnext.CacheFn1(fib)    
-
-        fmt.Println(fibCached(5))
-        fmt.Println(fibCached(6))
     }
+    fib = gofnext.CacheFn1(fib)
+
+    fmt.Println(fib(5))
+    fmt.Println(fib(6))
+}
+```
 
 ### Cache function with 0 param
 Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator_test.go)
@@ -289,7 +289,7 @@ gofnext.Config item list:
 |-----|------------------|
 | TTL    | Cache Time to Live |
 | CacheMap|Custom own cache |
-| SkipCacheIfErr | No cache if there is an error |
+| NeedCacheIfErr | Enable cache even if there is an error |
 | HashKeyPointerAddr | Use Pointer Addr as key instead of its value when hashing key |
 | HashKeyFunc| Custom hash key function |
 
@@ -303,11 +303,11 @@ e.g.
 ### Do not cache if there is an error
 > By default, gofnext will cache error when there is an error.
 
-To skip cache when there is an **error**, just add `SkipCacheIfErr: true`.
+To use the cache even when there is an **error**, just add `NeedCacheIfErr: true`.
 Refer to: https://github.com/ahuigo/gofnext/blob/main/examples/decorator-err_test.go
 
     gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
-        SkipCacheIfErr: true,
+        NeedCacheIfErr: true,
     }) 
 
 ### Hash Pointer address or value?
