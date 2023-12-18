@@ -300,9 +300,9 @@ e.g.
     }) 
 
 ### 如果有error就不缓存
-> 默认有error 不会缓存.
+> 默认有函数返回error时, 就不会用缓存.
 
-如果存在error时, 也使用缓存话。 参考: https://github.com/ahuigo/gofnext/blob/main/examples/decorator-err_test.go
+如果存在error时, 也需要缓存的话。 参考: https://github.com/ahuigo/gofnext/blob/main/examples/decorator-err_test.go
 
     gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
         NeedCacheIfErr: true,
