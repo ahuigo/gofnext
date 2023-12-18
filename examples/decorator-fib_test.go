@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ahuigo/gofnext"
+	"github.com/ahuigo/gofnext/go18"
 )
 
 // https://stackoverflow.com/questions/73379188/how-to-use-cache-decorator-with-a-recursive-function-in-go

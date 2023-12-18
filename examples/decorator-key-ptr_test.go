@@ -5,7 +5,7 @@ package examples
 import (
 	"testing"
 
-	"github.com/ahuigo/gofnext"
+	"github.com/ahuigo/gofnext/go18"
 )
 
 func TestCacheFuncKeyPointerAddr(t *testing.T) {

@@ -1,11 +1,11 @@
 # 🛠️ Go function extended
-[![tag](https://img.shields.io/github/tag/ahuigo/gofnext.svg)](https://github.com/ahuigo/gofnext/tags)
+[![tag](https://img.shields.io/github/tag/ahuigo/gofnext.svg)](https://github.com/ahuigo/gofnext/go18/tags)
 ![Go Version](https://img.shields.io/badge/Go-%3E%3D%201.21-%23007d9c)
-[![GoDoc](https://godoc.org/github.com/ahuigo/gofnext?status.svg)](https://pkg.go.dev/github.com/ahuigo/gofnext)
-![Build Status](https://github.com/ahuigo/gofnext/actions/workflows/test.yml/badge.svg)
-[![Go report](https://goreportcard.com/badge/github.com/ahuigo/gofnext)](https://goreportcard.com/report/github.com/ahuigo/gofnext)
+[![GoDoc](https://godoc.org/github.com/ahuigo/gofnext/go18?status.svg)](https://pkg.go.dev/github.com/ahuigo/gofnext/go18)
+![Build Status](https://github.com/ahuigo/gofnext/go18/actions/workflows/test.yml/badge.svg)
+[![Go report](https://goreportcard.com/badge/github.com/ahuigo/gofnext/go18)](https://goreportcard.com/report/github.com/ahuigo/gofnext/go18)
 [![Coverage](https://img.shields.io/codecov/c/github/ahuigo/gofnext)](https://codecov.io/gh/ahuigo/gofnext)
-[![Contributors](https://img.shields.io/github/contributors/ahuigo/gofnext)](https://github.com/ahuigo/gofnext/graphs/contributors)
+[![Contributors](https://img.shields.io/github/contributors/ahuigo/gofnext)](https://github.com/ahuigo/gofnext/go18/graphs/contributors)
 [![License](https://img.shields.io/github/license/ahuigo/gofnext)](./LICENSE)
 
 This **gofnext** provides the following functions extended(go>=1.21).
@@ -60,15 +60,15 @@ In addition to memory caching, it also supports Redis caching and custom caching
     - [x] Support customization of the CacheMap(manually)
 
 ## Decorator examples
-Refer to: [examples](https://github.com/ahuigo/gofnext/blob/main/examples)
+Refer to: [examples](https://github.com/ahuigo/gofnext/blob/go18/examples)
 
 ### Cache fibonacii function
-Refer to: [decorator fib example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-fib_test.go)
+Refer to: [decorator fib example](https://github.com/ahuigo/gofnext/blob/go18/examples/decorator-fib_test.go)
 
 ```go
 package main
 import "fmt"
-import "github.com/ahuigo/gofnext"
+import "github.com/ahuigo/gofnext/go18"
 func main() {
     var fib func(int) int
     fib = func(x int) int {
@@ -87,11 +87,11 @@ func main() {
 ```
 
 ### Cache function with 0 param
-Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator_test.go)
+Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/go18/examples/decorator_test.go)
 
     package examples
 
-    import "github.com/ahuigo/gofnext"
+    import "github.com/ahuigo/gofnext/go18"
 
     func getUserAnonymouse() (UserInfo, error) {
         fmt.Println("select * from db limit 1", time.Now())
@@ -114,7 +114,7 @@ Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/exampl
     }
 
 ### Cache function with 1 param
-Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-nil_test.go)
+Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/go18/examples/decorator-nil_test.go)
 
     func getUserNoError(age int) (UserInfo) {
     	time.Sleep(10 * time.Millisecond)
@@ -136,7 +136,7 @@ Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/exampl
     }
 
 ### Cache function with 2 params
-> Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator_test.go)
+> Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/go18/examples/decorator_test.go)
 
     func TestCacheFuncWith2Param(t *testing.T) {
         // Original function
@@ -170,7 +170,7 @@ Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/exampl
     }
 
 ### Cache function with more params(>2)
-Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator_test.go)
+Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/go18/examples/decorator_test.go)
 
 	executeCount := 0
 	type Stu struct {
@@ -218,7 +218,7 @@ Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/exampl
 	}
 
 ### Cache function with lru cache
-Refer to: [decorator lru example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-lru_test.go)
+Refer to: [decorator lru example](https://github.com/ahuigo/gofnext/blob/go18/examples/decorator-lru_test.go)
 
 	executeCount := 0
 	maxCacheSize := 2
@@ -236,7 +236,7 @@ Refer to: [decorator lru example](https://github.com/ahuigo/gofnext/blob/main/ex
 ### Cache function with redis cache(unstable)
 > Warning: Since redis needs JSON marshaling, this may result in data loss.
 
-Refer to: [decorator redis example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-redis_test.go)
+Refer to: [decorator redis example](https://github.com/ahuigo/gofnext/blob/go18/examples/decorator-redis_test.go)
 
     var (
         // Cacheable Function
@@ -279,7 +279,7 @@ Set redis config:
 	})
 
 ### Custom cache map
-Refer to: https://github.com/ahuigo/gofnext/blob/main/cache-map-mem.go
+Refer to: https://github.com/ahuigo/gofnext/blob/go18/cache-map-mem.go
 
 ## Decorator config
 ### Config item(`gofnext.Config`)
@@ -304,7 +304,7 @@ e.g.
 > By default, gofnext will cache error when there is an error.
 
 To use the cache even when there is an **error**, just add `NeedCacheIfErr: true`.
-Refer to: https://github.com/ahuigo/gofnext/blob/main/examples/decorator-err_test.go
+Refer to: https://github.com/ahuigo/gofnext/blob/go18/examples/decorator-err_test.go
 
     gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
         NeedCacheIfErr: true,
@@ -322,7 +322,7 @@ If you wanna hash pointer address, you should turn on `HashKeyPointerAddr`:
 
 ### Custom hash key function
 > In this case, you need to ensure that duplicate keys are not generated.
-Refer to: [example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-key-custom_test.go)
+Refer to: [example](https://github.com/ahuigo/gofnext/blob/go18/examples/decorator-key-custom_test.go)
 
 	// hash key function
 	hashKeyFunc := func(keys ...any) []byte{

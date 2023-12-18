@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ahuigo/gofnext/serial"
+	"github.com/ahuigo/gofnext/go18/serial"
 )
 
 type Person struct {

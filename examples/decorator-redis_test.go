@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ahuigo/gofnext"
+	"github.com/ahuigo/gofnext/go18"
 	"github.com/go-redis/redis"
 )
 

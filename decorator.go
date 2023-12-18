@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ahuigo/gofnext/serial"
+	"github.com/ahuigo/gofnext/go18/serial"
 )
 
 type Config struct {

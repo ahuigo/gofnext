@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ahuigo/gofnext"
+	gofnext "github.com/ahuigo/gofnext/go18"
 )
 
 func TestCacheFuncKeyCustom(t *testing.T) {

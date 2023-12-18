@@ -13,7 +13,7 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 
-	"github.com/ahuigo/gofnext/serial"
+	"github.com/ahuigo/gofnext/go18/serial"
 	"github.com/go-redis/redis"
 )
 

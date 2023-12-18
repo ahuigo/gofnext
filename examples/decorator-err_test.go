@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/ahuigo/gofnext"
+	"github.com/ahuigo/gofnext/go18"
 )
 
 type UserInfo struct {

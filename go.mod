@@ -1,6 +1,6 @@
-module github.com/ahuigo/gofnext
+module github.com/ahuigo/gofnext/go18
 
-go 1.21.1
+go 1.18
 
 require github.com/go-redis/redis v6.15.9+incompatible
 

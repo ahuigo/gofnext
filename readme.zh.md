@@ -1,11 +1,11 @@
 # 🛠️ Go function extended
-[![标签](https://img.shields.io/github/tag/ahuigo/gofnext.svg)](https://github.com/ahuigo/gofnext/tags)
+[![标签](https://img.shields.io/github/tag/ahuigo/gofnext.svg)](https://github.com/ahuigo/gofnext/go18/tags)
 ![Go 版本](https://img.shields.io/badge/Go-%3E%3D%201.21-%23007d9c)
-[![GoDoc](https://godoc.org/github.com/ahuigo/gofnext?status.svg)](https://pkg.go.dev/github.com/ahuigo/gofnext)
-![构建状态](https://github.com/ahuigo/gofnext/actions/workflows/test.yml/badge.svg)
-[![Go 报告](https://goreportcard.com/badge/github.com/ahuigo/gofnext)](https://goreportcard.com/report/github.com/ahuigo/gofnext)
+[![GoDoc](https://godoc.org/github.com/ahuigo/gofnext/go18?status.svg)](https://pkg.go.dev/github.com/ahuigo/gofnext/go18)
+![构建状态](https://github.com/ahuigo/gofnext/go18/actions/workflows/test.yml/badge.svg)
+[![Go 报告](https://goreportcard.com/badge/github.com/ahuigo/gofnext/go18)](https://goreportcard.com/report/github.com/ahuigo/gofnext/go18)
 [![覆盖率](https://img.shields.io/codecov/c/github/ahuigo/gofnext)](https://codecov.io/gh/ahuigo/gofnext)
-[![贡献者](https://img.shields.io/github/contributors/ahuigo/gofnext)](https://github.com/ahuigo/gofnext/graphs/contributors)
+[![贡献者](https://img.shields.io/github/contributors/ahuigo/gofnext)](https://github.com/ahuigo/gofnext/go18/graphs/contributors)
 [![许可证](https://img.shields.io/github/license/ahuigo/gofnext)](./LICENSE)
 
 这个 **gofnext** 提供以下函数扩展（go>=1.21）。
@@ -58,15 +58,15 @@
     - [x] 手动支持自定义 CacheMap
 
 ## 装饰器示例
-参考：[示例](https://github.com/ahuigo/gofnext/blob/main/examples)
+参考：[示例](https://github.com/ahuigo/gofnext/blob/go18/examples)
 
 ### 缓存斐波那契函数
-参考：[装饰器斐波那契示例](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-fib_test.go)
+参考：[装饰器斐波那契示例](https://github.com/ahuigo/gofnext/blob/go18/examples/decorator-fib_test.go)
 
 ```go
 package main
 import "fmt"
-import "github.com/ahuigo/gofnext"
+import "github.com/ahuigo/gofnext/go18"
 func main() {
     var fib func(int) int
     fib = func(x int) int {
@@ -85,11 +85,11 @@ func main() {
 ```
 
 ### 带有0个参数的缓存函数
-参考: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator_test.go)
+参考: [decorator example](https://github.com/ahuigo/gofnext/blob/go18/examples/decorator_test.go)
 
     package examples
 
-    import "github.com/ahuigo/gofnext"
+    import "github.com/ahuigo/gofnext/go18"
 
     func getUserAnonymouse() (UserInfo, error) {
         fmt.Println("select * from db limit 1", time.Now())
@@ -112,7 +112,7 @@ func main() {
     }
 
 ### 带有1个参数的缓存函数
-参考: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-nil_test.go)
+参考: [decorator example](https://github.com/ahuigo/gofnext/blob/go18/examples/decorator-nil_test.go)
 
     func getUserNoError(age int) (UserInfo) {
     	time.Sleep(10 * time.Millisecond)
@@ -134,7 +134,7 @@ func main() {
     }
 
 ### 带有2个参数的缓存函数
-> 参考: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator_test.go)
+> 参考: [decorator example](https://github.com/ahuigo/gofnext/blob/go18/examples/decorator_test.go)
 
     func TestCacheFuncWith2Param(t *testing.T) {
         // Original function
@@ -168,7 +168,7 @@ func main() {
     }
 
 ### 带有2个以上参数的缓存函数
-参考: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator_test.go)
+参考: [decorator example](https://github.com/ahuigo/gofnext/blob/go18/examples/decorator_test.go)
 
 	executeCount := 0
 	type Stu struct {
@@ -216,7 +216,7 @@ func main() {
 	}
 
 ### 带LRU 缓存的函数
-参考: [decorator lru example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-lru_test.go)
+参考: [decorator lru example](https://github.com/ahuigo/gofnext/blob/go18/examples/decorator-lru_test.go)
 
 	executeCount := 0
 	maxCacheSize := 2
@@ -235,7 +235,7 @@ func main() {
 > 警告: 目前使用json序列化,可能会有私有属性丢失
 > 后续序列化方法可能会有变化, 请不要用于生产
 
-参考: [decorator redis example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-redis_test.go)
+参考: [decorator redis example](https://github.com/ahuigo/gofnext/blob/go18/examples/decorator-redis_test.go)
 
     var (
         // Cacheable Function
@@ -278,7 +278,7 @@ Set redis config:
 	})
 
 ### 定制缓存函数
-参考: https://github.com/ahuigo/gofnext/blob/main/cache-map-mem.go
+参考: https://github.com/ahuigo/gofnext/blob/go18/cache-map-mem.go
 
 ## 装饰器配置
 ### 配置项清单(`gofnext.Config`)
@@ -302,7 +302,7 @@ e.g.
 ### 如果有error就不缓存
 > 默认有error 不会缓存.
 
-如果存在error时, 也使用缓存话。 参考: https://github.com/ahuigo/gofnext/blob/main/examples/decorator-err_test.go
+如果存在error时, 也使用缓存话。 参考: https://github.com/ahuigo/gofnext/blob/go18/examples/decorator-err_test.go
 
     gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
         NeedCacheIfErr: true,
@@ -320,7 +320,7 @@ e.g.
 ### 自定义哈希键函数
 > 这种情况下，您需要保证不会有生成重复的key。
 
-参考: [example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-key-custom_test.go)
+参考: [example](https://github.com/ahuigo/gofnext/blob/go18/examples/decorator-key-custom_test.go)
 
 	// hash key function
 	hashKeyFunc := func(keys ...any) []byte{

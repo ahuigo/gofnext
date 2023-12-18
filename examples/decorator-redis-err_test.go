@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ahuigo/gofnext"
+	"github.com/ahuigo/gofnext/go18"
 )
 
 func TestRedisCacheClientPanic(t *testing.T) {
