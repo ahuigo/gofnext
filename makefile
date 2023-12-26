@@ -1,5 +1,6 @@
 msg?=
 
+######################### test ################
 test: 
 	go test -race -coverprofile cover.out -coverpkg "./..." -failfast ./...
 cover: test
@@ -9,6 +10,8 @@ race:
 fmt:
 	gofmt -s -w .
 
+
+###################### pkg ##########################
 .ONESHELL:
 gitcheck:
 	if [[ "$(msg)" = "" ]] ; then echo "Usage: make pkg msg='commit msg'";exit 20; fi
