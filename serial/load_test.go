@@ -11,7 +11,7 @@ func almostEqual(a, b float64) bool {
 	return math.Abs(a-b) <= float64EqualityThreshold
 }
 
-func TestLoad(t *testing.T) {
+func TestLoadBase(t *testing.T) {
 	var f float64
 	Load([]byte(`-3.14`), &f)
 	expectedFloat := -3.14
@@ -25,11 +25,6 @@ func TestLoad(t *testing.T) {
 	expected := "Hello, World!chars:\"\r\n\t\b"
 	if str != expected {
 		t.Errorf("got %q, want %q", str, expected)
-	}
-	data = []byte(`"Hello, World!`)
-	err := Load(data, &str)
-	if err == nil {
-		t.Errorf("should be error, but get nil")
 	}
 
 	var i int

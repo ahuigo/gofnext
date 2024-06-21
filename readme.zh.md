@@ -63,6 +63,8 @@
 ### 缓存斐波那契函数
 参考：[装饰器斐波那契示例](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-fib_test.go)
 
+> Play: https://go.dev/play/p/7BCINKENJzA
+
 ```go
 package main
 import "fmt"

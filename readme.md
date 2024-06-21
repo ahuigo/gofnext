@@ -64,6 +64,7 @@ Refer to: [examples](https://github.com/ahuigo/gofnext/blob/main/examples)
 
 ### Cache fibonacii function
 Refer to: [decorator fib example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator-fib_test.go)
+> Play: https://go.dev/play/p/7BCINKENJzA
 
 ```go
 package main
