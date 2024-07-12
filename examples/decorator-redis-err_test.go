@@ -23,7 +23,7 @@ func TestRedisCacheFuncErr(t *testing.T) {
 	executeCount := 0
 	getUserScore := func(more int) (int, error) {
 		executeCount++
-		return 98 + more, nil
+		return 1 + more, nil
 	}
 
 	// Cacheable Function
@@ -34,13 +34,16 @@ func TestRedisCacheFuncErr(t *testing.T) {
 
 	// Execute the function multi times in parallel.
 	for i := 0; i < 10; i++ {
-		score, _ := getUserScoreFromDbWithCache(1)
-		if score != 99 {
-			t.Errorf("score should be 99, but get %d", score)
+		score, err := getUserScoreFromDbWithCache(1)
+		if err!=nil{
+			t.Fatal(err)
+		}
+		if score != 2 {
+			t.Errorf("score should be 2, but get %d", score)
 		}
 		score, _ = getUserScoreFromDbWithCache(2)
-		if score != 100 {
-			t.Fatalf("score should be 100, but get %d", score)
+		if score != 3 {
+			t.Fatalf("score should be 3, but get %d", score)
 		}
 		getUserScoreFromDbWithCache(3)
 		getUserScoreFromDbWithCache(3)

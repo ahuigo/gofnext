@@ -120,7 +120,10 @@ func (m *redisMap) Store(key, value any, err error) {
 		cacheData.Err = []byte(err.Error())
 	}
 	val, _ := json.Marshal(cacheData)
-	m.redisClient.HSet(m.redisPreKey, pkey, val).Err()
+	err = m.redisClient.HSet(m.redisPreKey, pkey, val).Err()
+	if err != nil {
+		println(err.Error())
+	}
 }
 
 func (m *redisMap) Load(key any) (value any, existed bool, err error) {

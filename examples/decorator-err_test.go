@@ -14,7 +14,11 @@ type UserInfo struct {
 	Age  int
 }
 
+var (
+	count = atomic.Uint32{}
+)
 func getUserAndErr() (UserInfo, error) {
+	count.Add(1)
 	// fmt.Println("select * from db limit 1", time.Now())
 	return UserInfo{Name: "Anonymous", Age: 9}, errors.New("db error")
 }
@@ -24,8 +28,11 @@ var (
 	getUserAndErrCached = gofnext.CacheFn0Err(getUserAndErr, nil)
 )
 
-func TestCacheFunc0WithErr(t *testing.T) {
+func TestNoCacheIfErr(t *testing.T) {
 	times := 10
+	count.Store(0)
+
+	// 1. run 10 times
 	parallelCall(func() {
 		userinfo, err := getUserAndErrCached()
 		if err == nil {
@@ -33,9 +40,14 @@ func TestCacheFunc0WithErr(t *testing.T) {
 		}
 		fmt.Println(userinfo, err)
 	}, times)
+
+	// 2. check count
+	if count.Load() !=  uint32(times){
+		t.Fatalf("Execute count should be %d, but get %d", times, count.Load())
+	}
 }
 
-func TestCacheFunc0CacheErr(t *testing.T) {
+func TestNeedCacheIfErr(t *testing.T) {
 	count := atomic.Uint32{}
 	getUserAndErr := func(age int) (UserInfo, error) {
 		count.Add(1)
@@ -44,18 +56,21 @@ func TestCacheFunc0CacheErr(t *testing.T) {
 		}
 		return UserInfo{Name: "Anonymous", Age: 9}, nil
 	}
-	// Cacheable Function
+	// 1. Cacheable Function
 	getUserAndErrCached := gofnext.CacheFn1Err(getUserAndErr, &gofnext.Config{
 		NeedCacheIfErr: true,
 	})
 
 	times := 5
+	// 2. run 5 times
 	parallelCall(func() {
 		_, err := getUserAndErrCached(0) //1 times
 		if err == nil {
 			t.Error("should be error, but get nil")
 		}
 	}, times)
+
+	// 3. check count
 	if count.Load() != 1 {
 		t.Errorf("Execute count should be 1, but get %d", count.Load())
 	}
