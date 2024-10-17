@@ -28,6 +28,7 @@ var (
 	getUserAndErrCached = gofnext.CacheFn0Err(getUserAndErr, nil)
 )
 
+// Test: if this is any error, do not cache error
 func TestNoCacheIfErr(t *testing.T) {
 	times := 10
 	count.Store(0)
@@ -47,6 +48,7 @@ func TestNoCacheIfErr(t *testing.T) {
 	}
 }
 
+// Test: if this is any error, cache error
 func TestNeedCacheIfErr(t *testing.T) {
 	count := atomic.Uint32{}
 	getUserAndErr := func(age int) (UserInfo, error) {

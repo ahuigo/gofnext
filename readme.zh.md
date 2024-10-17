@@ -286,13 +286,13 @@ Set redis config:
 ### 配置项清单(`gofnext.Config`)
 gofnext.Config 清单:
 
-| 键 | 描述|
+| 键 | 描述             |默认                |
 |-----|------------------|
-| TTL    | 缓存时间 |
-| CacheMap| 自定义缓存map |
-| NeedCacheIfErr | 如果调用存在error，也要使用缓存 |
-| HashKeyPointerAddr | 哈希键时，用指针本身地址，而不是指针的值 |
-| HashKeyFunc| 自定义哈希键函数 |
+| TTL    | 缓存时间 | 0(不过期)|
+| CacheMap| 自定义缓存map |默认内存Map|
+| NeedCacheIfErr | 如果调用存在error，也要使用缓存 |有err就不缓存|
+| HashKeyPointerAddr | 哈希key时，使用指针本身地址(&p)，而不是实际的值 |默认使用pointer指向实际值(*p)|
+| HashKeyFunc| 自定义哈希键函数 |内置hashFunc|
 
 ### 缓存时间
 e.g.

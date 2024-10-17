@@ -286,13 +286,13 @@ Refer to: https://github.com/ahuigo/gofnext/blob/main/cache-map-mem.go
 ### Config item(`gofnext.Config`)
 gofnext.Config item list:
 
-| Key | Description      |
-|-----|------------------|
-| TTL    | Cache Time to Live |
-| CacheMap|Custom own cache |
-| NeedCacheIfErr | Enable cache even if there is an error |
-| HashKeyPointerAddr | Use Pointer Addr as key instead of its value when hashing key |
-| HashKeyFunc| Custom hash key function |
+| Key | Description      |      Default       |
+|-----|------------------|--------------------|
+| TTL    | Cache Time to Live |0(No timeout)  |
+| CacheMap|Custom own cache   | Inner Memory  |
+| NeedCacheIfErr | Enable cache even if there is an error | false |
+| HashKeyPointerAddr | Use Pointer Addr(&p) as key instead of its value when hashing key |false(Use real value`*p` as key) |
+| HashKeyFunc| Custom hash key function | Inner hash func|
 
 ### Cache Timeout
 e.g.
