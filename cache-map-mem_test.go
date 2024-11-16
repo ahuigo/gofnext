@@ -26,8 +26,8 @@ func TestCacheFuncWithNoParam(t *testing.T) {
 
 	// Cacheable Function
 	getUserInfoFromDbWithCache := CacheFn0Err(getUserInfoFromDb, &Config{
-		TTL:            400 * time.Millisecond,
-		NeedCacheIfErr: true,
+		TTL:    400 * time.Millisecond,
+		ErrTTL: time.Hour,
 	})
 	_ = getUserInfoFromDbWithCache
 

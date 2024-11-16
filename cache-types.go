@@ -7,5 +7,6 @@ type CacheMap interface {
 	Store(key, value any, err error)
 	Load(key any) (value any, existed bool, err error)
 	SetTTL(ttl time.Duration) CacheMap
+	SetErrTTL(ttl time.Duration) CacheMap
 	NeedMarshal() bool
 }

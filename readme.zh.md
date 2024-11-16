@@ -289,8 +289,8 @@ gofnext.Config 清单:
 | 键 | 描述             |默认                |
 |-----|------------------|
 | TTL    | 缓存时间 | 0(不过期)|
+| ErrTTL| 控制error返回的缓存时间|0(0:不缓存error; >0:缓存error有ErrTTL限制；-1: 只依赖TTL)  |
 | CacheMap| 自定义缓存map |默认内存Map|
-| NeedCacheIfErr | 如果调用存在error，也要使用缓存 |有err就不缓存|
 | HashKeyPointerAddr | 哈希key时，使用指针本身地址(&p)，而不是实际的值 |默认使用pointer指向实际值(*p)|
 | HashKeyFunc| 自定义哈希键函数 |内置hashFunc|
 
@@ -307,7 +307,9 @@ e.g.
 如果存在error时, 也需要缓存的话。 参考: https://github.com/ahuigo/gofnext/blob/main/examples/decorator-err_test.go
 
     gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
-        NeedCacheIfErr: true,
+        ErrTTL: 0, // 不会缓存error
+        ErrTTL: time.Seconds * 60, // err缓存的errTTL 是60秒
+        ErrTTL: -1, // 只依赖TTL参数; ErrTTL 无效
     }) 
 
 ### 哈希指针地址还是值？

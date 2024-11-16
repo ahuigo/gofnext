@@ -50,6 +50,17 @@ In addition to memory caching, it also supports Redis caching and custom caching
 | func f() (res) | gofnext.CacheFn0(f, &gofnext.Config{CacheMap: gofnext.NewCacheLru(9999)})  <br/>// Maxsize of cache is 9999|
 | func f() (res) | gofnext.CacheFn0(f, &gofnext.Config{CacheMap: gofnext.NewCacheRedis("cacheKey")})  <br/>// Warning: redis's marshaling may result in data loss|
 
+**Benchmark**
+Benchmark case: https://github.com/ahuigo/gofnext/blob/main/bench/
+```
+# golang1.22
+pkg: github.com/ahuigo/gofnext/bench
+BenchmarkGetDataWithNoCache-10               100          11285146 ns/op          281286 B/op         99 allocs/op
+BenchmarkGetDataWithMemCache-10         13926818                86.33 ns/op           72 B/op          2 allocs/op
+BenchmarkGetDataWithLruCache-10         12431094                95.57 ns/op           72 B/op          2 allocs/op
+BenchmarkGetDataWithRedisCache-10          15058             77713 ns/op           28020 B/op         24 allocs/op
+```
+
 ## Features
 - [x] Cache Decorator (gofnext)
     - [x] Decorator cache for function
@@ -288,9 +299,9 @@ gofnext.Config item list:
 
 | Key | Description      |      Default       |
 |-----|------------------|--------------------|
-| TTL    | Cache Time to Live |0(No timeout)  |
+| TTL    | Cache Time to Live |0(0:Permanent cache error; >0:Cache with TTL)  |
+| ErrTTL | cache TTL for error return if there is an error | 0(0:Donot cache error;  >0:Cache error with TTL; -1:rely on TTL only; )  |
 | CacheMap|Custom own cache   | Inner Memory  |
-| NeedCacheIfErr | Enable cache even if there is an error | false |
 | HashKeyPointerAddr | Use Pointer Addr(&p) as key instead of its value when hashing key |false(Use real value`*p` as key) |
 | HashKeyFunc| Custom hash key function | Inner hash func|
 
@@ -304,11 +315,13 @@ e.g.
 ### Do not cache if there is an error
 > By default, gofnext won't cache error when there is an error.
 
-To use the cache even when there is an **error**, simply add `NeedCacheIfErr: true`.
+If there is an **error**, and you wanna control the error cache's TTL, simply add `ErrTTL: time.Duration`.
 Refer to: https://github.com/ahuigo/gofnext/blob/main/examples/decorator-err_test.go
 
     gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
-        NeedCacheIfErr: true,
+        ErrTTL: 0, // Do not cache error
+        ErrTTL: time.Seconds * 60, // error cache's errTTL is 60s
+        ErrTTL: -1, // rely on TTL only
     }) 
 
 ### Hash Pointer address or value?

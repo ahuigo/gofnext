@@ -27,19 +27,20 @@ func TestCacheLru_StoreAndLoad(t *testing.T) {
 	// Load a non-existent key
 	_, existed, _ = m.Load("key2")
 	if existed {
-		t.Errorf("Expected key2 to not exist")
+		t.Fatal("Expected key2 to not exist")
 	}
 
 	// Store a value with an error
 	m.Store("key3", nil, errors.New("some error"))
+	m.SetErrTTL(-1)
 
 	// Load the value with an error
 	_, _, err = m.Load("key3")
 	if err == nil {
-		t.Errorf("Expected an error, got nil")
+		t.Fatal("Expected an error, got nil")
 	}
 	if err.Error() != "some error" {
-		t.Errorf("Expected 'some error', got: %v", err)
+		t.Fatalf("Expected 'some error', got: %v", err)
 	}
 }
 

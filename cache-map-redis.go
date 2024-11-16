@@ -20,6 +20,7 @@ type redisMap struct {
 	mu            sync.Mutex
 	redisClient   redis.UniversalClient
 	ttl           time.Duration
+	errTtl        time.Duration
 	redisPreKey   string
 	maxHashKeyLen int
 }
@@ -28,7 +29,7 @@ type redisData struct {
 	Data      []byte
 	Err       []byte
 	CreatedAt time.Time
-	TTL       time.Duration
+	// TTL       time.Duration
 }
 
 func NewCacheRedis(mapKey string) *redisMap {
@@ -111,9 +112,12 @@ func (m *redisMap) Store(key, value any, err error) {
 	data, _ := json.Marshal(value)
 	cacheData := redisData{
 		Data: data,
-		TTL:  m.ttl,
+		// TTL:  m.ttl,
 	}
-	if m.ttl > 0 {
+	if err != nil && m.errTtl <= 0 {
+		return
+	}
+	if m.ttl > 0 || m.errTtl >= 0 {
 		cacheData.CreatedAt = time.Now()
 	}
 	if err != nil {
@@ -149,7 +153,8 @@ func (m *redisMap) Load(key any) (value any, existed bool, err error) {
 	if cacheData.Err != nil {
 		err = errors.New(string(cacheData.Err))
 	}
-	if cacheData.TTL > 0 && time.Since(cacheData.CreatedAt) > cacheData.TTL {
+	if (m.ttl > 0 && time.Since(cacheData.CreatedAt) > m.ttl) ||
+		(m.errTtl >= 0 && cacheData.Err != nil && time.Since(cacheData.CreatedAt) > m.errTtl) {
 		return value, false, nil //expired
 	}
 	existed = true
@@ -158,6 +163,10 @@ func (m *redisMap) Load(key any) (value any, existed bool, err error) {
 
 func (m *redisMap) SetTTL(ttl time.Duration) CacheMap {
 	m.ttl = ttl
+	return m
+}
+func (m *redisMap) SetErrTTL(errTTL time.Duration) CacheMap {
+	m.errTtl = errTTL
 	return m
 }
 

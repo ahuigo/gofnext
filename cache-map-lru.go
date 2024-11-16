@@ -19,6 +19,7 @@ type cacheLru struct {
 	maxSize int
 	mu      sync.RWMutex
 	ttl     time.Duration
+	errTtl  time.Duration
 }
 
 func NewCacheLru(maxSize int) *cacheLru {
@@ -57,7 +58,8 @@ func (m *cacheLru) Load(key any) (value any, existed bool, err error) {
 	elInter, existed := m.listMap.Load(key)
 	if existed {
 		el := elInter.(*cachedNode)
-		if m.ttl > 0 && time.Since(el.createdAt) > m.ttl {
+		if (m.ttl > 0 && time.Since(el.createdAt) > m.ttl) ||
+			(el.err != nil && m.errTtl >= 0 && time.Since(el.createdAt) > m.errTtl) {
 			m.listMap.Delete(key)
 			m.list.Remove(el.element)
 			existed = false
@@ -72,6 +74,10 @@ func (m *cacheLru) Load(key any) (value any, existed bool, err error) {
 
 func (m *cacheLru) SetTTL(ttl time.Duration) CacheMap {
 	m.ttl = ttl
+	return m
+}
+func (m *cacheLru) SetErrTTL(errTTL time.Duration) CacheMap {
+	m.errTtl = errTTL
 	return m
 }
 
