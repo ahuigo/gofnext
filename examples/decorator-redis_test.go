@@ -108,13 +108,13 @@ func TestRedisCacheFuncWithTTLTimeout(t *testing.T) {
 	})
 
 	// Execute the function multi times in parallel.
-	for i := 0; i < 5; i++ { //2+4=6 times
+	for i := 0; i < 5; i++ { //5 times
 		getUserScoreFromDbWithCache(1)
-		time.Sleep(time.Millisecond * 500)
-		getUserScoreFromDbWithCache(1)
+		getUserScoreFromDbWithCache(1) // cache hit: read from redis
+		time.Sleep(time.Millisecond * 200)
 	}
 
-	if executeCount != 6 {
-		t.Errorf("executeCount should be 6, but get %d", executeCount)
+	if executeCount != 5 {
+		t.Errorf("executeCount should be 5, but get %d", executeCount)
 	}
 }

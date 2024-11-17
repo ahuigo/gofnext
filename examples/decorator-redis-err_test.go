@@ -35,7 +35,7 @@ func TestRedisCacheFuncErr(t *testing.T) {
 	// Execute the function multi times in parallel.
 	for i := 0; i < 10; i++ {
 		score, err := getUserScoreFromDbWithCache(1)
-		if err!=nil{
+		if err != nil {
 			t.Fatal(err)
 		}
 		if score != 2 {

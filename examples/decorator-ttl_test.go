@@ -20,7 +20,7 @@ func TestCacheFuncWithTTLTimeout(t *testing.T) {
 		TTL: time.Millisecond * 10,
 	})
 
-	// Execute the function multi times 
+	// Execute the function multi times
 	getUserScoreFromDbWithCache(1)
 	getUserScoreFromDbWithCache(1)
 	time.Sleep(time.Millisecond * 11) // wait for ttl timeout

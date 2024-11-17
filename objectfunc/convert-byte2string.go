@@ -58,7 +58,7 @@ func (sb *_StructByte2String) AddPtrSeen(rv reflect.Value) uintptr {
 	return ptr
 }
 
-func (sb *_StructByte2String) convertSliceArray(rv reflect.Value, ) interface{} {
+func (sb *_StructByte2String) convertSliceArray(rv reflect.Value) interface{} {
 	if rv.Type().Elem().Kind() == reflect.Uint8 {
 		return string(rv.Bytes())
 	}

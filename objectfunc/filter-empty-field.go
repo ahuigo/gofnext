@@ -116,7 +116,7 @@ func (ins *_FilterEmptyField) filterStruct(rv reflect.Value) interface{} {
 		key := f.Name
 		// 1. is empty
 		fv := rv.Field(i)
-		if ins.isEmptyField(fv){
+		if ins.isEmptyField(fv) {
 			continue
 		}
 		// 2. set json tag name

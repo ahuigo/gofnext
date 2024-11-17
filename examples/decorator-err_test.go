@@ -18,12 +18,12 @@ type UserInfo struct {
 var (
 	count = atomic.Uint32{}
 )
+
 func getUserWithErr() (UserInfo, error) {
 	count.Add(1)
 	// fmt.Println("select * from db limit 1", time.Now())
 	return UserInfo{Name: "Anonymous", Age: 9}, errors.New("db error")
 }
-
 
 // Test: if there is any error, do not cache error(default)
 func TestNoCacheErr(t *testing.T) {
@@ -42,7 +42,7 @@ func TestNoCacheErr(t *testing.T) {
 	}, times)
 
 	// 2. check count
-	if count.Load() !=  uint32(times){
+	if count.Load() != uint32(times) {
 		t.Fatalf("Execute count should be %d, but get %d", times, count.Load())
 	}
 }
@@ -121,7 +121,7 @@ func TestNeedLruCacheErrWithTtlTimeout(t *testing.T) {
 	interval := time.Millisecond * 3
 	// 1. Cacheable Function
 	getUserWithErrCached := gofnext.CacheFn1Err(getUserWithErr, &gofnext.Config{
-		ErrTTL: interval * 1,
+		ErrTTL:   interval * 1,
 		CacheMap: gofnext.NewCacheLru(100),
 	})
 

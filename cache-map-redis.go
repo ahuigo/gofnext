@@ -21,7 +21,7 @@ type redisMap struct {
 	redisClient   redis.UniversalClient
 	ttl           time.Duration
 	errTtl        time.Duration
-	redisPreKey   string
+	redisFuncKey  string
 	maxHashKeyLen int
 }
 
@@ -32,9 +32,9 @@ type redisData struct {
 	// TTL       time.Duration
 }
 
-func NewCacheRedis(mapKey string) *redisMap {
-	if mapKey == "" {
-		panic("mapKey can not be empty")
+func NewCacheRedis(funcKey string) *redisMap {
+	if funcKey == "" {
+		panic("NewCacheRedis: funcKey cannot be empty")
 	}
 	redisAddr := "localhost:6379"
 	config := &redis.UniversalOptions{
@@ -43,8 +43,8 @@ func NewCacheRedis(mapKey string) *redisMap {
 	}
 	redisClient := redis.NewUniversalClient(config)
 	return &redisMap{
-		redisClient: redisClient,
-		redisPreKey: mapKey,
+		redisClient:  redisClient,
+		redisFuncKey: "gofnext:" + funcKey,
 	}
 }
 
@@ -66,7 +66,7 @@ func (m *redisMap) SetRedisUniversalOpts(opts *redis.UniversalOptions) *redisMap
 }
 
 func (m *redisMap) ClearAll() *redisMap {
-	m.redisClient.Del(m.redisPreKey)
+	m.redisClient.Del(m.redisFuncKey)
 	return m
 }
 
@@ -124,7 +124,7 @@ func (m *redisMap) Store(key, value any, err error) {
 		cacheData.Err = []byte(err.Error())
 	}
 	val, _ := json.Marshal(cacheData)
-	err = m.redisClient.HSet(m.redisPreKey, pkey, val).Err()
+	err = m.redisClient.HSet(m.redisFuncKey, pkey, val).Err()
 	if err != nil {
 		println(err.Error())
 	}
@@ -134,7 +134,7 @@ func (m *redisMap) Load(key any) (value any, existed bool, err error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	pkey := m.strkey(key)
-	val, err := m.redisClient.HGet(m.redisPreKey, pkey).Bytes()
+	val, err := m.redisClient.HGet(m.redisFuncKey, pkey).Bytes()
 	// m.redisClient.TTL()
 	if err == redis.Nil {
 		existed = false

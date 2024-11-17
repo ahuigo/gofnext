@@ -28,6 +28,7 @@ In addition to memory caching, it also supports Redis caching and custom caching
     - [Cache function with lru cache](#cache-function-with-lru-cache)
     - [Cache function with redis cache(unstable)](#cache-function-with-redis-cacheunstable)
     - [Custom cache map](#custom-cache-map)
+    - [Extension(pg)](#extensionpg)
   - [Decorator config](#decorator-config)
     - [Config item(`gofnext.Config`)](#config-itemgofnextconfig)
     - [Cache Timeout](#cache-timeout)
@@ -68,6 +69,7 @@ BenchmarkGetDataWithRedisCache-10          15058             77713 ns/op        
     - [x] Support memory CacheMap(default)
     - [x] Support memory-lru CacheMap
     - [x] Support redis CacheMap
+    - [x] Support [postgres CacheMap](https://github.com/ahuigo/gofnext_pg)
     - [x] Support customization of the CacheMap(manually)
 
 ## Decorator examples
@@ -292,6 +294,9 @@ Set redis config:
 
 ### Custom cache map
 Refer to: https://github.com/ahuigo/gofnext/blob/main/cache-map-mem.go
+
+### Extension(pg)
+- Postgres cache extension: https://github.com/ahuigo/gofnext_pg
 
 ## Decorator config
 ### Config item(`gofnext.Config`)

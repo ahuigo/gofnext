@@ -38,8 +38,8 @@ func (m *memCacheMap) Load(key any) (value any, existed bool, err error) {
 	elInter, existed := m.Map.Load(key)
 	if existed {
 		el := elInter.(*cachedValue)
-		if ( m.ttl > 0 && time.Since(el.createdAt) > m.ttl) ||
-		(el.err != nil && m.errTtl >= 0 && time.Since(el.createdAt) > m.errTtl) {
+		if (m.ttl > 0 && time.Since(el.createdAt) > m.ttl) ||
+			(el.err != nil && m.errTtl >= 0 && time.Since(el.createdAt) > m.errTtl) {
 			m.Map.Delete(key)
 			existed = false
 		} else {

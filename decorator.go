@@ -50,10 +50,10 @@ func (c *cachedFn[K1, K2, V]) setConfig(config *Config) *cachedFn[K1, K2, V] {
 	c.hashKeyPointerAddr = config.HashKeyPointerAddr
 	c.needDumpKey = config.NeedDumpKey
 	c.cacheMap = config.CacheMap
-	if config.ErrTTL< -1{
+	if config.ErrTTL < -1 {
 		panic("ErrTTL should not be less than -1")
 	}
-	if config.TTL <0{
+	if config.TTL < 0 {
 		panic("TTL should not be less than 0")
 	}
 	c.cacheMap.SetErrTTL(config.ErrTTL)

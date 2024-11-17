@@ -14,12 +14,8 @@ func getUser() UserInfo {
 	return UserInfo{Name: "Alex", Age: 20}
 }
 
-var (
-	// Cacheable Function with 1 param and no error
-	getUserInfoFromDb = gofnext.CacheFn0(getUser)
-)
-
 func TestCacheFuncWith0Param(t *testing.T) {
+	getUserInfoFromDb := gofnext.CacheFn0(getUser)
 	// Execute the function 10 times in parallel.
 	parallelCall(func() {
 		userinfo := getUserInfoFromDb()
