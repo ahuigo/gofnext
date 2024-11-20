@@ -90,7 +90,7 @@ func TestCacheFuncWithMoreParams(t *testing.T) {
 		}
 	}
 
-	// Convert to extra parameters to a single parameter(2 prameters is ok)
+	// Convert to extra parameters to a single parameter(1 or 2 prameters)
 	fnWrap := func(arg Stu) int {
 		return fn(arg.name, arg.age, arg.gender)
 	}

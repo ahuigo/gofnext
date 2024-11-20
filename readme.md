@@ -31,8 +31,8 @@ In addition to memory caching, it also supports Redis caching and custom caching
     - [Extension(pg)](#extensionpg)
   - [Decorator config](#decorator-config)
     - [Config item(`gofnext.Config`)](#config-itemgofnextconfig)
-    - [Cache Timeout](#cache-timeout)
-    - [Do not cache if there is an error](#do-not-cache-if-there-is-an-error)
+    - [Cache's Live Time(TTL)](#caches-live-timettl)
+    - [Error Cache's Live Time(ErrTTl)](#error-caches-live-timeerrttl)
     - [Hash Pointer address or value?](#hash-pointer-address-or-value)
     - [Custom hash key function](#custom-hash-key-function)
   - [Roadmap](#roadmap)
@@ -56,10 +56,10 @@ Benchmark case: https://github.com/ahuigo/gofnext/blob/main/bench/
 ```
 # golang1.22
 pkg: github.com/ahuigo/gofnext/bench
-BenchmarkGetDataWithNoCache-10               100          11285146 ns/op          281286 B/op         99 allocs/op
-BenchmarkGetDataWithMemCache-10         13926818                86.33 ns/op           72 B/op          2 allocs/op
-BenchmarkGetDataWithLruCache-10         12431094                95.57 ns/op           72 B/op          2 allocs/op
-BenchmarkGetDataWithRedisCache-10          15058             77713 ns/op           28020 B/op         24 allocs/op
+BenchmarkGetDataWithNoCache-10               100          11179015 ns/op          281220 B/op         99 allocs/op
+BenchmarkGetDataWithMemCache-10         11036955                95.49 ns/op           72 B/op          2 allocs/op
+BenchmarkGetDataWithLruCache-10         11362039               104.8 ns/op            72 B/op          2 allocs/op
+BenchmarkGetDataWithRedisCache-10          15850             74653 ns/op           28072 B/op         29 allocs/op
 ```
 
 ## Features
@@ -304,28 +304,37 @@ gofnext.Config item list:
 
 | Key | Description      |      Default       |
 |-----|------------------|--------------------|
-| TTL    | Cache Time to Live |0(0:Permanent cache error; >0:Cache with TTL)  |
+| TTL    | Cache Time to Live |0(if TTL=0:use permanent cache; if TTL>0:set cache with TTL)  |
 | ErrTTL | cache TTL for error return if there is an error | 0(0:Donot cache error;  >0:Cache error with TTL; -1:rely on TTL only; )  |
 | CacheMap|Custom own cache   | Inner Memory  |
 | HashKeyPointerAddr | Use Pointer Addr(&p) as key instead of its value when hashing key |false(Use real value`*p` as key) |
 | HashKeyFunc| Custom hash key function | Inner hash func|
 
-### Cache Timeout
-e.g.
+### Cache's Live Time(TTL)
+For example: set cache's live time to 1hour.
 
     gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
-        TTL:  time.Hour,
+        /* Set cache's TTL time: 
+            if TTL==0, use permanent cache; 
+            if TTL>0, cache's live time is TTL
+        */
+        TTL:  time.Hour, 
     }) 
 
-### Do not cache if there is an error
+### Error Cache's Live Time(ErrTTl)
 > By default, gofnext won't cache error when there is an error.
 
 If there is an **error**, and you wanna control the error cache's TTL, simply add `ErrTTL: time.Duration`.
 Refer to: https://github.com/ahuigo/gofnext/blob/main/examples/decorator-err_test.go
 
     gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
-        ErrTTL: 0, // Do not cache error
-        ErrTTL: time.Seconds * 60, // error cache's errTTL is 60s
+        /* Set error cache's TTL time:
+            if ErrTTL=0, do not cache error;
+            if ErrTTL>0, error cache's live time is ErrTTL;
+            if ErrTTL=-1, error cache's live time is controlled by TTL
+        */
+        ErrTTL: 0, // Do not cache error(default:0)
+        ErrTTL: time.Seconds * 60, // error cache's live time is 60s
         ErrTTL: -1, // rely on TTL only
     }) 
 

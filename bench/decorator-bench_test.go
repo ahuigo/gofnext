@@ -8,35 +8,36 @@ import (
 )
 
 type UserInfo struct {
+	ID   int
 	Name string
 	Age  int
 	Desc string
 }
 
-func getUser() UserInfo {
+func getUser(id int) UserInfo {
 	desc := ""
 	for i := 0; i < 100; i++ {
 		desc += letterBytes
 	}
 	time.Sleep(10 * time.Millisecond)
-	return UserInfo{Name: "Alex", Age: 20, Desc: desc}
+	return UserInfo{Name: "Alex", Age: 20, Desc: desc, ID: id}
 }
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 var (
-	getUserWithMemCache = gofnext.CacheFn0(getUser)
-	getUserWithLruCache = gofnext.CacheFn0(getUser, &gofnext.Config{
+	getUserWithMemCache = gofnext.CacheFn1(getUser)
+	getUserWithLruCache = gofnext.CacheFn1(getUser, &gofnext.Config{
 		CacheMap: gofnext.NewCacheLru(100),
 	})
-	getUserWithRedisCache = gofnext.CacheFn0(getUser, &gofnext.Config{
+	getUserWithRedisCache = gofnext.CacheFn1(getUser, &gofnext.Config{
 		CacheMap: gofnext.NewCacheRedis("gofnext-test-key"),
 	})
 )
 
-func benchmark(b *testing.B, f func() UserInfo) {
+func benchmark(b *testing.B, f func(int) UserInfo) {
 	for i := 0; i < b.N; i++ {
-		f()
+		f(50)
 	}
 }
 

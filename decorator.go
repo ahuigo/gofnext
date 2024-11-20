@@ -11,7 +11,16 @@ import (
 )
 
 type Config struct {
-	TTL                time.Duration
+	/* Set cache's TTL time:
+	if TTL==0, use permanent cache;
+	if TTL>0, cache's live time is TTL
+	*/
+	TTL time.Duration
+	/* Set error cache's TTL time:
+	if ErrTTL=0, do not cache error;
+	if ErrTTL>0, error cache's live time is ErrTTL;
+	if ErrTTL=-1, error cache's live time is controlled by TTL
+	*/
 	ErrTTL             time.Duration
 	CacheMap           CacheMap
 	NeedDumpKey        bool
