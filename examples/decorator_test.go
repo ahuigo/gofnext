@@ -111,6 +111,7 @@ func TestCacheFuncWithMoreParams(t *testing.T) {
 
 	// Original function
 	fn := func(name string, age, gender, height int) int {
+		_ = age+ gender+ height
 		executeCount++
 		// select score from db where name=name and age=age and gender=gender
 		switch name {

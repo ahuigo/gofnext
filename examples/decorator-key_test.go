@@ -36,11 +36,37 @@ func TestCacheFuncKeyStruct(t *testing.T) {
 		}
 		getUserScoreFromDbWithCache(UserInfo{id: 2})
 		getUserScoreFromDbWithCache(UserInfo{id: 3})
-	}, 10)
+	}, 5)
 
 	if executeCount != 3 {
 		t.Errorf("executeCount should be 3, but get %d", executeCount)
 	}
+}
+func TestCacheFuncKeyStructUnexportedKey(t *testing.T) {
+    type info struct{
+        name string // unexported field
+    }
+
+	type UserInfo struct {
+        info struct{
+            name string // unexported field
+        }
+	}
+	// Original function
+	getUserName := func(user UserInfo, flag *string) string {
+		return user.info.name
+	}
+
+	// Cacheable Function
+	getUserName2 := gofnext.CacheFn2(getUserName, )
+
+	// Execute the function
+    flag := "flag"
+	name := getUserName2(UserInfo{info{name: "Alex"}}, &flag)
+	if name != "Alex" {
+		t.Errorf("name should be 'Alex', but get %s", name)
+	}
+
 }
 
 func TestCacheFuncKeyMap(t *testing.T) {
