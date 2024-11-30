@@ -28,17 +28,17 @@ type Config struct {
 	HashKeyFunc        func(args ...any) []byte
 }
 
-type cachedFn[K1 any, K2 any, V any] struct {
+type cachedFn[K1, K2, K3 any, V any] struct {
 	needDumpKey        bool
 	hashKeyPointerAddr bool
 	hashKeyFunc        func(args ...any) []byte
 	cacheMap           CacheMap
 	pkeyLockMap        sync.Map
 	keyLen             int
-	getFunc            func(K1, K2) (V, error)
+	getFunc            func(K1, K2, K3) (V, error)
 }
 
-func (c *cachedFn[K1, K2, V]) setConfigs(configs ...*Config) *cachedFn[K1, K2, V] {
+func (c *cachedFn[K1, K2, K3, V]) setConfigs(configs ...*Config) *cachedFn[K1, K2, K3, V] {
 	if len(configs) > 0 {
 		return c.setConfig(configs[0])
 	} else {
@@ -46,7 +46,7 @@ func (c *cachedFn[K1, K2, V]) setConfigs(configs ...*Config) *cachedFn[K1, K2, V
 	}
 }
 
-func (c *cachedFn[K1, K2, V]) setConfig(config *Config) *cachedFn[K1, K2, V] {
+func (c *cachedFn[K1, K2, K3, V]) setConfig(config *Config) *cachedFn[K1, K2, K3, V] {
 	// default value
 	if config == nil {
 		config = &Config{}
@@ -96,12 +96,41 @@ func (c *cachedFn[K1, K2, V]) setConfig(config *Config) *cachedFn[K1, K2, V] {
 	return c
 }
 
-// Cache Function with 2 parameter
+// Cache Function with 3 parameter(with error)
+func CacheFn3Err[K1 any, K2 any, K3 any, V any](
+	getFunc func(K1, K2, K3) (V, error),
+	configs ...*Config,
+) func(K1, K2, K3) (V, error) {
+	getFunc0 := func(k1 K1, k2 K2, k3 K3) (V, error) {
+		return getFunc(k1, k2, k3)
+	}
+	ins := &cachedFn[K1, K2, K3, V]{getFunc: getFunc0, keyLen: 3}
+	ins.setConfigs(configs...)
+	return ins.invoke3err
+}
+
+// Cache Function with 3 parameter
+func CacheFn3[K1 any, K2 any, K3 any, V any](
+	getFunc func(K1, K2, K3) V,
+	configs ...*Config,
+) func(K1, K2, K3) V {
+	getFunc0 := func(k1 K1, k2 K2, k3 K3) (V, error) {
+		return getFunc(k1, k2, k3), nil
+	}
+	ins := &cachedFn[K1, K2, K3, V]{getFunc: getFunc0, keyLen: 3}
+	ins.setConfigs(configs...)
+	return ins.invoke3
+}
+
+// Cache Function with 2 parameter(with error)
 func CacheFn2Err[K1 any, K2 any, V any](
 	getFunc func(K1, K2) (V, error),
 	configs ...*Config,
 ) func(K1, K2) (V, error) {
-	ins := &cachedFn[K1, K2, V]{getFunc: getFunc, keyLen: 2}
+	getFunc0 := func(k1 K1, k2 K2, k3 int8) (V, error) {
+		return getFunc(k1, k2)
+	}
+	ins := &cachedFn[K1, K2, int8, V]{getFunc: getFunc0, keyLen: 2}
 	ins.setConfigs(configs...)
 	return ins.invoke2err
 }
@@ -111,48 +140,50 @@ func CacheFn2[K1 any, K2 any, V any](
 	getFunc func(K1, K2) V,
 	configs ...*Config,
 ) func(K1, K2) V {
-	getFunc0 := func(ctx K1, key K2) (V, error) {
-		return getFunc(ctx, key), nil
+	getFunc0 := func(k1 K1, k2 K2, k3 any) (V, error) {
+		return getFunc(k1, k2), nil
 	}
-	ins := &cachedFn[K1, K2, V]{getFunc: getFunc0, keyLen: 2}
+	ins := &cachedFn[K1, K2, any, V]{getFunc: getFunc0, keyLen: 2}
 	ins.setConfigs(configs...)
 	return ins.invoke2
 }
 
-// Cache Function with 1 parameter
+// Cache Function with 1 parameter(with error)
 func CacheFn1Err[K any, V any](
 	getFunc func(K) (V, error),
 	configs ...*Config,
 ) func(K) (V, error) {
-	getFunc0 := func(ctx context.Context, key K) (V, error) {
+	getFunc0 := func(key K, k2 context.Context, k3 any) (V, error) {
 		return getFunc(key)
 	}
-	ins := &cachedFn[context.Context, K, V]{getFunc: getFunc0, keyLen: 1}
+	ins := &cachedFn[K, context.Context, any, V]{getFunc: getFunc0, keyLen: 1}
 	ins.setConfigs(configs...)
-	return ins.invoke1
+	x := ins.invoke1err
+	return x
 }
 
+// Cache Function with 1 parameter
 func CacheFn1[K any, V any](
 	getFunc func(K) V,
 	configs ...*Config,
 ) func(K) V {
-	getFunc0 := func(ctx context.Context, key K) (V, error) {
-		return getFunc(key), nil
+	getFunc0 := func(k1 K, k2 context.Context, k3 int8) (V, error) {
+		return getFunc(k1), nil
 	}
-	ins := &cachedFn[context.Context, K, V]{getFunc: getFunc0, keyLen: 1}
+	ins := &cachedFn[K, context.Context, int8, V]{getFunc: getFunc0, keyLen: 1}
 	ins.setConfigs(configs...)
-	return ins.invoke1err
+	return ins.invoke1
 }
 
-// Cache Function with 0 parameter
+// Cache Function with 0 parameter(with error)
 func CacheFn0Err[V any](
 	getFunc func() (V, error),
 	configs ...*Config,
 ) func() (V, error) {
-	getFunc0 := func(ctx context.Context, i int8) (V, error) {
+	getFunc0 := func(ctx context.Context, i int8, a byte) (V, error) {
 		return getFunc()
 	}
-	ins := &cachedFn[context.Context, int8, V]{getFunc: getFunc0, keyLen: 0}
+	ins := &cachedFn[context.Context, int8, byte, V]{getFunc: getFunc0, keyLen: 0}
 	ins.setConfigs(configs...)
 	return ins.invoke0err
 }
@@ -162,42 +193,58 @@ func CacheFn0[V any](
 	getFunc func() V,
 	configs ...*Config,
 ) func() V {
-	getFunc0 := func(ctx context.Context, i int8) (V, error) {
+	getFunc0 := func(ctx context.Context, i int8, a byte) (V, error) {
 		return getFunc(), nil
 	}
-	ins := &cachedFn[context.Context, int8, V]{getFunc: getFunc0, keyLen: 0}
+	ins := &cachedFn[context.Context, int8, byte, V]{getFunc: getFunc0, keyLen: 0}
 	ins.setConfigs(configs...)
 	return ins.invoke0
 }
 
 // Invoke cached function with no parameter
-func (c *cachedFn[any, int, V]) invoke0err() (V, error) {
-	var ctx any
-	var key int
-	// key = 0                                    // error: cannot use 0 (untyped int constant) as uint8 value in assignment
-	return c.invoke2err(ctx, key)
-}
-func (c *cachedFn[any, int, V]) invoke0() V {
-	var ctx any
-	var key int
-	retv, _ := c.invoke2err(ctx, key)
+func (c *cachedFn[any, int, A, V]) invoke0() V {
+	var k1 any
+	var k2 int
+	var k3 A
+	retv, _ := c.invoke3err(k1, k2, k3)
 	return retv
 }
 
-// Invoke cached function with 1 parameter
-func (c *cachedFn[Ctx, K, V]) invoke1(key K) (V, error) {
-	var ctx Ctx
-	return c.invoke2err(ctx, key)
+// Invoke cached function with no parameter(with error)
+func (c *cachedFn[any, int8, A, V]) invoke0err() (V, error) {
+	var k1 any
+	var k2 int8
+	// k2 = 0                                    // error: cannot use 0 (untyped int constant) as uint8 value in assignment
+	var k3 A
+	return c.invoke3err(k1, k2, k3)
 }
 
-func (c *cachedFn[Ctx, K, V]) invoke1err(key K) V {
-	var ctx Ctx
-	val, _ := c.invoke2err(ctx, key)
+// Invoke cached function with 1 parameter
+func (c *cachedFn[K1, K2, K3, V]) invoke1(k1 K1) V {
+	var k2 K2
+	var k3 K3
+	val, _ := c.invoke3err(k1, k2, k3)
 	return val
 }
+func (c *cachedFn[K1, K2, K3, V]) invoke1err(k1 K1) (V, error) {
+	var k2 K2
+	var k3 K3
+	return c.invoke3err(k1, k2, k3)
+}
 
-func (c *cachedFn[K1, K2, V]) invoke2(key1 K1, key2 K2) (retv V) {
-	retv, _ = c.invoke2err(key1, key2)
+// Invoke cached function with 2 parameter
+func (c *cachedFn[K1, K2, A, V]) invoke2(key1 K1, key2 K2) (retv V) {
+	var a A
+	retv, _ = c.invoke3err(key1, key2, a)
+	return retv
+}
+func (c *cachedFn[K1, K2, K3, V]) invoke2err(k1 K1, k2 K2) (V, error) {
+	var k3 K3
+	return c.invoke3err(k1, k2, k3)
+}
+
+func (c *cachedFn[K1, K2, K3, V]) invoke3(key1 K1, key2 K2, key3 K3) (retv V) {
+	retv, _ = c.invoke3err(key1, key2, key3)
 	return retv
 }
 
@@ -216,13 +263,15 @@ func isHashableKey(key any, cmpPtr bool) (canHash bool) {
 	return reflect.ValueOf(key).Kind() != reflect.Pointer
 }
 
-func (c *cachedFn[K1, K2, V]) hashKeyFuncWrap(key1 K1, key2 K2) (pkey any) {
+func (c *cachedFn[K1, K2, K3, V]) hashKeyFuncWrap(key1 K1, key2 K2, key3 K3) (pkey any) {
 	// outer hash key func
 	if c.hashKeyFunc != nil {
-		if c.keyLen == 2 {
+		if c.keyLen == 3 {
+			pkey = string(c.hashKeyFunc(key1, key2, key3))
+		} else if c.keyLen == 2 {
 			pkey = string(c.hashKeyFunc(key1, key2))
 		} else if c.keyLen == 1 {
-			pkey = string(c.hashKeyFunc(key2))
+			pkey = string(c.hashKeyFunc(key1))
 		} else {
 			pkey = 0
 		}
@@ -232,7 +281,19 @@ func (c *cachedFn[K1, K2, V]) hashKeyFuncWrap(key1 K1, key2 K2) (pkey any) {
 	// inner hash key func
 	needHashPtrAddr := c.hashKeyPointerAddr
 	needDumpKey := c.needDumpKey
-	if c.keyLen == 2 {
+	if c.keyLen == 3 {
+		if _, hasCtx := any(key1).(context.Context); hasCtx {
+			pkey = [2]any{key2, key3}
+			if !needDumpKey {
+				needDumpKey = !isHashableKey(key2, needHashPtrAddr) || !isHashableKey(key3, needHashPtrAddr)
+			}
+		} else {
+			pkey = [3]any{key1, key2, key3}
+			if !needDumpKey {
+				needDumpKey = !isHashableKey(key1, needHashPtrAddr) || !isHashableKey(key2, needHashPtrAddr) || !isHashableKey(key3, needHashPtrAddr)
+			}
+		}
+	} else if c.keyLen == 2 {
 		if _, hasCtx := any(key1).(context.Context); hasCtx {
 			pkey = key2
 			if !needDumpKey {
@@ -245,12 +306,12 @@ func (c *cachedFn[K1, K2, V]) hashKeyFuncWrap(key1 K1, key2 K2) (pkey any) {
 			}
 		}
 	} else if c.keyLen == 1 {
-		if _, hasCtx := any(key2).(context.Context); hasCtx {
+		if _, hasCtx := any(key1).(context.Context); hasCtx {
 			pkey = 0
 		} else {
-			pkey = key2
+			pkey = key1
 			if !needDumpKey {
-				needDumpKey = !isHashableKey(key2, needHashPtrAddr)
+				needDumpKey = !isHashableKey(key1, needHashPtrAddr)
 			}
 		}
 	} else {
@@ -263,9 +324,9 @@ func (c *cachedFn[K1, K2, V]) hashKeyFuncWrap(key1 K1, key2 K2) (pkey any) {
 }
 
 // Invoke cached function with 2 parameter
-func (c *cachedFn[K1, K2, V]) invoke2err(key1 K1, key2 K2) (retv V, err error) {
+func (c *cachedFn[K1, K2, K3, V]) invoke3err(key1 K1, key2 K2, key3 K3) (retv V, err error) {
 	// 1. generate pkey
-	var pkey any = c.hashKeyFuncWrap(key1, key2)
+	var pkey any = c.hashKeyFuncWrap(key1, key2, key3)
 
 	// 2. require lock for each pkey(go routine safe)
 	var tmpOnce sync.RWMutex
@@ -315,7 +376,7 @@ checkCache:
 		defer pkeyLock.Unlock()
 
 		// 4.2 check cache again
-		val, err := c.getFunc(key1, key2)
+		val, err := c.getFunc(key1, key2, key3)
 		c.cacheMap.Store(pkey, &val, err)
 		return val, err
 	}

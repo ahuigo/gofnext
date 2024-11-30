@@ -3,6 +3,9 @@ msg?=
 ######################### test ################
 test: 
 	go test -race -coverprofile cover.out -coverpkg "./..." -failfast ./...
+.PHONY: bench
+bench:
+	go test -bench="Cache$$" -benchmem ./bench
 cover: test
 	go tool cover -html=cover.out
 race: 

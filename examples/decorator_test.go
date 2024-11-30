@@ -69,17 +69,48 @@ func TestCacheFuncWith2Params(t *testing.T) {
 	}
 }
 
-// Cache Function with more parameter(>2)
+func TestCacheFuncWith3Params(t *testing.T) {
+	// Original function
+	executeCount := 0
+	sum := func(a, b, c int) int {
+		executeCount++
+		time.Sleep(10 * time.Millisecond)
+		return a + b + c
+	}
+
+	// Cacheable Function
+	sumCache := gofnext.CacheFn3(sum, &gofnext.Config{
+		TTL: time.Hour,
+	}) // getFunc can only accept 2 parameter
+
+	// Execute the function multi times in parallel.
+	// ctx := context.Background()
+	parallelCall(func() {
+		score := sumCache(1, 3, 5)
+		if score != 9 {
+			t.Errorf("score should be 99, but get %d", score)
+		}
+		sumCache(1, 3, 5)
+		sumCache(1, 3, 6)
+	}, 5)
+
+	if executeCount != 2 {
+		t.Errorf("executeCount should be 2, but get %d", executeCount)
+	}
+}
+
+// Cache Function with more parameter(>3)
 func TestCacheFuncWithMoreParams(t *testing.T) {
 	executeCount := 0
 	type Stu struct {
 		name   string
 		age    int
 		gender int
+		height int
 	}
 
 	// Original function
-	fn := func(name string, age, gender int) int {
+	fn := func(name string, age, gender, height int) int {
 		executeCount++
 		// select score from db where name=name and age=age and gender=gender
 		switch name {
@@ -90,28 +121,60 @@ func TestCacheFuncWithMoreParams(t *testing.T) {
 		}
 	}
 
-	// Convert to extra parameters to a single parameter(1 or 2 prameters)
+	// Convert to extra parameters to a 1 parameter(2 or 3 prameters)
 	fnWrap := func(arg Stu) int {
-		return fn(arg.name, arg.age, arg.gender)
+		return fn(arg.name, arg.age, arg.gender, arg.height)
 	}
 
 	// Cacheable Function
 	fnCachedInner := gofnext.CacheFn1(fnWrap)
-	fnCached := func(name string, age, gender int) int {
-		return fnCachedInner(Stu{name, age, gender})
+	fnCached := func(name string, age, gender, height int) int {
+		return fnCachedInner(Stu{name, age, gender, height})
 	}
 
 	// Execute the function multi times in parallel.
 	parallelCall(func() {
-		score := fnCached("Alex", 20, 1)
+		score := fnCached("Alex", 20, 1, 160)
 		if score != 10 {
 			t.Errorf("score should be 10, but get %d", score)
 		}
-		fnCached("Jhon", 21, 0)
-		fnCached("Alex", 20, 1)
+		fnCached("Jhon", 21, 0, 160)
+		fnCached("Alex", 20, 1, 160)
 	}, 10)
 
 	// Test count
+	if executeCount != 2 {
+		t.Errorf("executeCount should be 2, but get %d", executeCount)
+	}
+}
+
+func TestCacheCtxFuncWith3Params(t *testing.T) {
+	// Original function
+	executeCount := 0
+	sum := func(ctx context.Context, b, c int) int {
+		executeCount++
+		time.Sleep(10 * time.Millisecond)
+		return b + c
+	}
+
+	// Cacheable Function
+	sumCache := gofnext.CacheFn3(sum, &gofnext.Config{
+		TTL: time.Hour,
+	}) // accept 3 parameter
+
+	// Execute the function multi times in parallel.
+	parallelCall(func() {
+		ctx := context.Background()
+		score := sumCache(ctx, 3, 5)
+		if score != 8 {
+			t.Errorf("score should be 99, but get %d", score)
+		}
+		ctx = context.Background()
+		sumCache(ctx, 3, 5)
+		ctx = context.Background()
+		sumCache(ctx, 3, 6)
+	}, 5)
+
 	if executeCount != 2 {
 		t.Errorf("executeCount should be 2, but get %d", executeCount)
 	}

@@ -365,4 +365,4 @@ Refer to: [example](https://github.com/ahuigo/gofnext/blob/main/examples/decorat
 	})
 
 ## Roadmap
-- [] Include private property when serialization for redis
+- [] Include private property when serializating for redis(#spec/reflect/unexported)
