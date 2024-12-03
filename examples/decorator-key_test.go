@@ -43,14 +43,14 @@ func TestCacheFuncKeyStruct(t *testing.T) {
 	}
 }
 func TestCacheFuncKeyStructUnexportedKey(t *testing.T) {
-    type info struct{
-        name string // unexported field
-    }
+	type info struct {
+		name string // unexported field
+	}
 
 	type UserInfo struct {
-        info struct{
-            name string // unexported field
-        }
+		info struct {
+			name string // unexported field
+		}
 	}
 	// Original function
 	getUserName := func(user UserInfo, flag *string) string {
@@ -58,10 +58,10 @@ func TestCacheFuncKeyStructUnexportedKey(t *testing.T) {
 	}
 
 	// Cacheable Function
-	getUserName2 := gofnext.CacheFn2(getUserName, )
+	getUserName2 := gofnext.CacheFn2(getUserName)
 
 	// Execute the function
-    flag := "flag"
+	flag := "flag"
 	name := getUserName2(UserInfo{info{name: "Alex"}}, &flag)
 	if name != "Alex" {
 		t.Errorf("name should be 'Alex', but get %s", name)

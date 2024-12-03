@@ -55,7 +55,7 @@ func TestNeedCacheErrWithTTL(t *testing.T) {
 		if age <= 0 {
 			return UserInfo{}, errors.New("invalid age")
 		}
-		return UserInfo{Name: "Anonymous", Age: 9}, nil
+		return UserInfo{Name: "Anonymous", Age: age}, nil
 	}
 	// 1. Cacheable Function
 	getUserAndErrCached := gofnext.CacheFn1Err(getUserAndErr, &gofnext.Config{

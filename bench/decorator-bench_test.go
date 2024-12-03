@@ -36,6 +36,7 @@ var (
 )
 
 func benchmark(b *testing.B, f func(int) UserInfo) {
+	b.Helper()
 	for i := 0; i < b.N; i++ {
 		f(50)
 	}
