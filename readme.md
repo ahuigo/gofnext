@@ -41,15 +41,15 @@ In addition to memory caching, it also supports Redis caching and custom caching
 
 | function        | decorator             |
 |-----------------|-----------------------|
-| func f() res    | gofnext.CacheFn0(f) |
-| func f(a) res   | gofnext.CacheFn1(f) |
-| func f(a,b) res | gofnext.CacheFn2(f) |
-| func f() (res,err)    | gofnext.CacheFn0Err(f) |
-| func f(a) (res,err)   | gofnext.CacheFn1Err(f)    |
-| func f(a,b) (res,err) | gofnext.CacheFn2Err(f)    |
-| func f() (res,err) | gofnext.CacheFn0Err(f, &gofnext.Config{TTL: time.Hour})<br/>// memory cache with ttl  |
-| func f() (res) | gofnext.CacheFn0(f, &gofnext.Config{CacheMap: gofnext.NewCacheLru(9999)})  <br/>// Maxsize of cache is 9999|
-| func f() (res) | gofnext.CacheFn0(f, &gofnext.Config{CacheMap: gofnext.NewCacheRedis("cacheKey")})  <br/>// Warning: redis's marshaling may result in data loss|
+| func f() R    | gofnext.CacheFn0(f) |
+| func f(K) R   | gofnext.CacheFn1(f) |
+| func f(K1, K2) R | gofnext.CacheFn2(f) |
+| func f() (R,error)    | gofnext.CacheFn0Err(f) |
+| func f(T) (R,error)   | gofnext.CacheFn1Err(f)    |
+| func f(T,P) (R,error) | gofnext.CacheFn2Err(f)    |
+| func f() (R,error) | gofnext.CacheFn0Err(f, &gofnext.Config{TTL: time.Hour})<br/>// memory cache with ttl  |
+| func f() R | gofnext.CacheFn0(f, &gofnext.Config{CacheMap: gofnext.NewCacheLru(9999)})  <br/>// Maxsize of cache is 9999|
+| func f() R | gofnext.CacheFn0(f, &gofnext.Config{CacheMap: gofnext.NewCacheRedis("cacheKey")})  <br/>// Warning: redis's marshaling may result in data loss|
 
 **Benchmark**
 Benchmark case: https://github.com/ahuigo/gofnext/blob/main/bench/
