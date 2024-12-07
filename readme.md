@@ -63,7 +63,7 @@ BenchmarkGetDataWithRedisCache-10          15850             74653 ns/op        
 ```
 
 ## Features
-- [x] Cache Decorator (gofnext)
+- Cache Decorator (gofnext)
     - [x] Decorator cache for function
     - [x] Concurrent goroutine Safe
     - [x] Support memory CacheMap(default)
@@ -71,6 +71,9 @@ BenchmarkGetDataWithRedisCache-10          15850             74653 ns/op        
     - [x] Support redis CacheMap
     - [x] Support [postgres CacheMap](https://github.com/ahuigo/gofnext_pg)
     - [x] Support customization of the CacheMap(manually)
+- Common functions
+    - I recommend [gox](https://github.com/icza/gox), it provides ternary operator(If/IfFunc),Ptr,Pie,....
+
 
 ## Decorator examples
 Refer to: [examples](https://github.com/ahuigo/gofnext/blob/main/examples)
