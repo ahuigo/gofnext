@@ -152,7 +152,7 @@ Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/exampl
     	}, times)
     }
 
-### Cache function with 2 params
+### Cache function with 2 or 3 params
 > Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator_test.go)
 
     func TestCacheFuncWith2Param(t *testing.T) {
@@ -166,19 +166,19 @@ Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/exampl
         }
 
         // Cacheable Function
-        getUserScoreFromDbWithCache := gofnext.CacheFn2Err(getUserScore, &gofnext.Config{
+        getUserScoreWithCache := gofnext.CacheFn2Err(getUserScore, &gofnext.Config{
             TTL: time.Hour,
         }) // getFunc can only accept 2 parameter
 
         // Execute the function multi times in parallel.
         ctx := context.Background()
         parallelCall(func() {
-            score, _ := getUserScoreFromDbWithCache(ctx, 1)
+            score, _ := getUserScoreWithCache(ctx, 1)
             if score != 99 {
                 t.Errorf("score should be 99, but get %d", score)
             }
-            getUserScoreFromDbWithCache(ctx, 2)
-            getUserScoreFromDbWithCache(ctx, 3)
+            getUserScoreWithCache(ctx, 2)
+            getUserScoreWithCache(ctx, 3)
         }, 10)
 
         if executeCount != 3 {
@@ -186,7 +186,7 @@ Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/exampl
         }
     }
 
-### Cache function with more params(>2)
+### Cache function with more params(>3)
 Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator_test.go)
 
 	executeCount := 0
@@ -257,7 +257,7 @@ Refer to: [decorator redis example](https://github.com/ahuigo/gofnext/blob/main/
 
     var (
         // Cacheable Function
-        getUserScoreFromDbWithCache = gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
+        getUserScoreWithCache = gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
             TTL:  time.Hour,
             CacheMap: gofnext.NewCacheRedis("redis-cache-key"),
         }) 
@@ -266,7 +266,7 @@ Refer to: [decorator redis example](https://github.com/ahuigo/gofnext/blob/main/
     func TestRedisCacheFuncWithTTL(t *testing.T) {
         // Execute the function multi times in parallel.
         for i := 0; i < 10; i++ {
-            score, _ := getUserScoreFromDbWithCache(1)
+            score, _ := getUserScoreWithCache(1)
             if score != 99 {
                 t.Errorf("score should be 99, but get %d", score)
             }
@@ -347,7 +347,7 @@ By default, if parameter is pointer, decorator will hash its real value instead 
 
 If you wanna hash pointer address, you should turn on `HashKeyPointerAddr`:
 
-	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
+	getUserScoreWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
 		HashKeyPointerAddr: true,
 	})
 
@@ -363,7 +363,7 @@ Refer to: [example](https://github.com/ahuigo/gofnext/blob/main/examples/decorat
 	}
 
 	// Cacheable Function
-	getUserScoreFromDbWithCache := gofnext.CacheFn2Err(getUserScore, &gofnext.Config{
+	getUserScoreWithCache := gofnext.CacheFn2Err(getUserScore, &gofnext.Config{
 		HashKeyFunc: hashKeyFunc,
 	})
 

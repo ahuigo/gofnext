@@ -30,10 +30,10 @@ func TestCacheFuncWith1Param(t *testing.T) {
 	}
 
 	// cacheable function
-	getUserInfoFromDb := gofnext.CacheFn1(getUser)
+	getUserInfoCached := gofnext.CacheFn1(getUser)
 
 	parallelCall(func() {
-		userinfo := getUserInfoFromDb(20)
+		userinfo := getUserInfoCached(20)
 		fmt.Println(userinfo)
 	}, 10)
 }
@@ -49,19 +49,19 @@ func TestCacheFuncWith2Params(t *testing.T) {
 	}
 
 	// Cacheable Function
-	getUserScoreFromDbWithCache := gofnext.CacheFn2(getUserScore, &gofnext.Config{
+	getUserScoreWithCache := gofnext.CacheFn2(getUserScore, &gofnext.Config{
 		TTL: time.Hour,
 	}) // getFunc can only accept 2 parameter
 
 	// Execute the function multi times in parallel.
 	ctx := context.Background()
 	parallelCall(func() {
-		score := getUserScoreFromDbWithCache(ctx, 1)
+		score := getUserScoreWithCache(ctx, 1)
 		if score != 99 {
 			t.Errorf("score should be 99, but get %d", score)
 		}
-		getUserScoreFromDbWithCache(ctx, 2)
-		getUserScoreFromDbWithCache(ctx, 3)
+		getUserScoreWithCache(ctx, 2)
+		getUserScoreWithCache(ctx, 3)
 	}, 10)
 
 	if executeCount != 3 {
