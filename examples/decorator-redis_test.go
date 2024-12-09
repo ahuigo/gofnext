@@ -10,7 +10,7 @@ import (
 
 func TestRedisCacheClient(t *testing.T) {
 	// method 1: by default: localhost:6379
-	cache := gofnext.NewCacheRedis("redis-cache-key")
+	cache := gofnext.NewCacheRedis("redis-cache-key") // you can list value `HGETALL _gofnext:redis-cache-key`
 
 	// method 2: set redis addr
 	cache.SetRedisAddr("192.168.1.1:6379")
@@ -31,29 +31,34 @@ func TestRedisCacheClient(t *testing.T) {
 func TestRedisCacheFuncWithTTL(t *testing.T) {
 	// Original function
 	executeCount := 0
-	getUserScore := func(more int) (int, error) {
+	add98Origin := func(more int) (int, error) {
 		executeCount++
 		return 98 + more, nil
 	}
+	redisCache := gofnext.NewCacheRedis("redis-cache-key")
+	redisCache.ClearAll() // redis> del _gofnext:redis-cache-key
+	// redisCache.SetRedisOpts(&redis.Options{
+	// 	Addr: "localhost:6379",
+	// })
 
 	// Cacheable Function
-	getUserScoreFromDbWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
+	add98 := gofnext.CacheFn1Err(add98Origin, &gofnext.Config{
 		TTL:      time.Hour,
-		CacheMap: gofnext.NewCacheRedis("redis-cache-key").ClearAll(),
+		CacheMap: redisCache,
 	})
 
-	// Execute the function multi times in parallel.
+	// Execute the function 10 times
 	for i := 0; i < 10; i++ {
-		score, err := getUserScoreFromDbWithCache(1)
+		score, err := add98(1)
 		if err != nil || score != 99 {
 			t.Errorf("score should be 99, but get %d", score)
 		}
-		score, _ = getUserScoreFromDbWithCache(2)
+		score, _ = add98(2)
 		if score != 100 {
 			t.Fatalf("score should be 100, but get %d", score)
 		}
-		getUserScoreFromDbWithCache(3)
-		getUserScoreFromDbWithCache(3)
+		add98(3)
+		add98(3)
 	}
 
 	if executeCount != 3 {

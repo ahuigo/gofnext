@@ -44,7 +44,7 @@ func NewCacheRedis(funcKey string) *redisMap {
 	redisClient := redis.NewUniversalClient(config)
 	return &redisMap{
 		redisClient:  redisClient,
-		redisFuncKey: "gofnext:" + funcKey,
+		redisFuncKey: "_gofnext:" + funcKey,
 	}
 }
 
