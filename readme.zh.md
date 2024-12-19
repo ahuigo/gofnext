@@ -39,11 +39,11 @@
 | 函数             | 装饰器                      |
 |------------------|-----------------------------|
 | func f() R     | gofnext.CacheFn0(f)         |
-| func f(T) R    | gofnext.CacheFn1(f)         |
-| func f(T,P) R  | gofnext.CacheFn2(f)         |
-| func f() (R,error)     | gofnext.CacheFn0Err(f)      |
-| func f(T) (R,error)    | gofnext.CacheFn1Err(f)      |
-| func f(T,P) (R,error)  | gofnext.CacheFn2Err(f)      |
+| func f(K1) R    | gofnext.CacheFn1(f)         |
+| func f(K1, K2) R  | gofnext.CacheFn2(f)         |
+| func f() (R, error)     | gofnext.CacheFn0Err(f)      |
+| func f(K1) (R, error)    | gofnext.CacheFn1Err(f)      |
+| func f(K1, K2) (R, error)  | gofnext.CacheFn2Err(f)      |
 | func f() (R,error) | gofnext.CacheFn0Err(f, &gofnext.Config{TTL: time.Hour})<br/>// 带有 ttl 的内存缓存  |
 | func f() (R) | gofnext.CacheFn0(f, &gofnext.Config{CacheMap: gofnext.NewCacheLru(9999)})  <br/>// 缓存的最大大小为 9999|
 | func f() (R) | gofnext.CacheFn0(f, &gofnext.Config{CacheMap: gofnext.NewCacheRedis("cacheKey")})  <br/>// 警告：redis 的序列化可能会导致数据丢失|
