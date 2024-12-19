@@ -43,7 +43,8 @@ In addition to memory caching, it also supports Redis caching and custom caching
 |-----------------|-----------------------|
 | func f() R    | gofnext.CacheFn0(f) |
 | func f(K1) R   | gofnext.CacheFn1(f) |
-| func f(K1, K2) R | gofnext.CacheFn2(f) |
+| func f(K1,K2) R | gofnext.CacheFn2(f) |
+| func f(K1,K2,K3) R | gofnext.CacheFn3(f) |
 | func f() (R,error)    | gofnext.CacheFn0Err(f) |
 | func f(K1) (R,error)   | gofnext.CacheFn1Err(f)    |
 | func f(K1, K2) (R,error) | gofnext.CacheFn2Err(f)    |
