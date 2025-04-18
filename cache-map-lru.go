@@ -14,12 +14,13 @@ type cachedNode struct {
 }
 
 type cacheLru struct {
-	list    *list.List
-	listMap *sync.Map
-	maxSize int
-	mu      sync.RWMutex
-	ttl     time.Duration
-	errTtl  time.Duration
+	list     *list.List
+	listMap  *sync.Map
+	maxSize  int
+	mu       sync.RWMutex
+	ttl      time.Duration
+	errTtl   time.Duration
+	resueTtl time.Duration
 }
 
 func NewCacheLru(maxSize int) *cacheLru {
@@ -51,22 +52,28 @@ func (m *cacheLru) Store(key, value any, err error) {
 	m.listMap.Store(key, &el)
 }
 
-func (m *cacheLru) Load(key any) (value any, existed bool, err error) {
+func (m *cacheLru) Load(key any) (value any, hasCache, alive bool, err error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	elInter, existed := m.listMap.Load(key)
-	if existed {
+	elInter, hasCache := m.listMap.Load(key)
+	if hasCache {
 		el := elInter.(*cachedNode)
 		if (m.ttl > 0 && time.Since(el.createdAt) > m.ttl) ||
 			(el.err != nil && m.errTtl >= 0 && time.Since(el.createdAt) > m.errTtl) {
-			m.listMap.Delete(key)
-			m.list.Remove(el.element)
-			existed = false
+			// 1. cache is within reuse ttl
+			if m.resueTtl > 0 && time.Since(el.createdAt) < m.resueTtl+m.ttl {
+				return el.val, true, false, el.err
+			} else {
+				// 2. cache is not valid
+				m.listMap.Delete(key)
+				m.list.Remove(el.element)
+				return el.val, false, false, el.err
+			}
 		} else {
-			// move to front
+			// 3. cache is valid: move to front
 			m.list.MoveToFront(el.element)
-			return el.val, existed, el.err
+			return el.val, true, true, el.err
 		}
 	}
 	return
@@ -78,6 +85,10 @@ func (m *cacheLru) SetTTL(ttl time.Duration) CacheMap {
 }
 func (m *cacheLru) SetErrTTL(errTTL time.Duration) CacheMap {
 	m.errTtl = errTTL
+	return m
+}
+func (m *cacheLru) SetReuseTTL(errTTL time.Duration) CacheMap {
+	m.resueTtl = errTTL
 	return m
 }
 

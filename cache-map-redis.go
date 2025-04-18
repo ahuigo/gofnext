@@ -21,6 +21,7 @@ type redisMap struct {
 	redisClient   redis.UniversalClient
 	ttl           time.Duration
 	errTtl        time.Duration
+	reuseTtl      time.Duration
 	redisFuncKey  string
 	maxHashKeyLen int
 }
@@ -126,18 +127,18 @@ func (m *redisMap) Store(key, value any, err error) {
 	val, _ := json.Marshal(cacheData)
 	err = m.redisClient.HSet(m.redisFuncKey, pkey, val).Err()
 	if err != nil {
-		println(err.Error())
+		slogger.Warn("gofnext.redisMap", "err", err.Error())
 	}
 }
 
-func (m *redisMap) Load(key any) (value any, existed bool, err error) {
+func (m *redisMap) Load(key any) (value any, hasCache, alive bool, err error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	pkey := m.strkey(key)
 	val, err := m.redisClient.HGet(m.redisFuncKey, pkey).Bytes()
 	// m.redisClient.TTL()
 	if err == redis.Nil {
-		existed = false
+		hasCache = false
 		err = nil
 		return
 	} else if err != nil {
@@ -155,10 +156,18 @@ func (m *redisMap) Load(key any) (value any, existed bool, err error) {
 	}
 	if (m.ttl > 0 && time.Since(cacheData.CreatedAt) > m.ttl) ||
 		(m.errTtl >= 0 && cacheData.Err != nil && time.Since(cacheData.CreatedAt) > m.errTtl) {
-		return value, false, nil //expired
+		// 1. cache is within reuse ttl
+		if m.reuseTtl > 0 && time.Since(cacheData.CreatedAt) < m.reuseTtl+m.ttl {
+			return value, true, false, nil
+		} else {
+			// 2. cache is not valid
+			m.redisClient.HDel(m.redisFuncKey, pkey)
+			return value, false, false, nil
+		}
+	} else {
+		// 3. cache is valid
+		return value, true, true, nil
 	}
-	existed = true
-	return
 }
 
 func (m *redisMap) SetTTL(ttl time.Duration) CacheMap {
@@ -167,6 +176,10 @@ func (m *redisMap) SetTTL(ttl time.Duration) CacheMap {
 }
 func (m *redisMap) SetErrTTL(errTTL time.Duration) CacheMap {
 	m.errTtl = errTTL
+	return m
+}
+func (m *redisMap) SetReuseTTL(ttl time.Duration) CacheMap {
+	m.reuseTtl = ttl
 	return m
 }
 

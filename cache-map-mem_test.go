@@ -5,45 +5,79 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
 
 func TestCacheFuncWithNoParam(t *testing.T) {
-	type UserInfo struct {
-		Name string
-		Age  int
-	}
-
 	executeCount := 0
 	// Original function
-	getUserInfoFromDb := func() (UserInfo, error) {
+	getNumFromDb := func() (int, error) {
 		executeCount++
-		fmt.Println("select * from db limit 1", time.Now())
 		time.Sleep(10 * time.Millisecond)
-		return UserInfo{Name: "Anonymous", Age: 9}, errors.New("db error")
+		return executeCount, errors.New("db error")
 	}
 
 	// Cacheable Function
-	getUserInfoFromDbWithCache := CacheFn0Err(getUserInfoFromDb, &Config{
+	getNumWithCache := CacheFn0Err(getNumFromDb, &Config{
 		TTL:    400 * time.Millisecond,
 		ErrTTL: time.Hour,
 	})
-	_ = getUserInfoFromDbWithCache
 
 	// Execute the function multi times in parallel.
 	parallelCall(func() {
-		userinfo, err := getUserInfoFromDbWithCache()
+		userinfo, err := getNumWithCache()
 		fmt.Println(userinfo, err)
 	}, 10)
 
 	// Test ttl
-	_, _ = getUserInfoFromDbWithCache()
+	num, _ := getNumWithCache()
+	AssertEqual(t, num, 1)
+
+	// Test expired ttl
 	time.Sleep(600 * time.Millisecond)
-	_, _ = getUserInfoFromDbWithCache()
+	num, _ = getNumWithCache()
+	AssertEqual(t, num, 2)
 
 	if executeCount != 2 {
 		t.Error("executeCount should be 2", ", but get ", executeCount)
+	}
+}
+
+func TestCacheFuncReuseCache(t *testing.T) {
+	var executeCount atomic.Int32
+	// Original function
+	getNum := func() (int32, error) {
+		executeCount.Add(1)
+		return executeCount.Load(), nil
+	}
+
+	// Cacheable Function
+	getNumWithCache := CacheFn0Err(getNum, &Config{
+		TTL:      200 * time.Millisecond,
+		ErrTTL:   time.Hour,
+		ReuseTTL: 200 * time.Millisecond,
+	})
+
+	// Test ttl
+	num, _ := getNumWithCache()
+	AssertEqual(t, num, 1)
+
+	// Test expired ttl(reuse ttl)
+	time.Sleep(200 * time.Millisecond)
+	num, _ = getNumWithCache()
+	AssertEqual(t, num, 1)
+
+	// Wait for async goroutine to finish function call
+	time.Sleep(100 * time.Millisecond)
+	num, _ = getNumWithCache()
+	AssertEqual(t, num, 2)
+
+	time.Sleep(100 * time.Millisecond)
+	count := executeCount.Load()
+	if count != 2 {
+		t.Error("executeCount should be 2", ", but get ", count)
 	}
 }
 

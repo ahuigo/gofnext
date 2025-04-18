@@ -2,6 +2,7 @@ package examples
 
 import (
 	"fmt"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -35,6 +36,46 @@ func TestCacheFuncWithOneParamLRU(t *testing.T) {
 
 	if executeCount != 30 {
 		t.Errorf("executeCount should be 30, but get %d", executeCount)
+	}
+
+}
+
+func TestReuseCacheForLRU(t *testing.T) {
+	// counter
+	var executeCount atomic.Int32
+	// Original function
+	maxCacheSize := 2
+	var getNum = func(more int) (int, error) {
+		executeCount.Add(1)
+		c := executeCount.Load()
+		return int(c) + more, nil
+	}
+
+	ttl := time.Millisecond * 50
+	reuseTTL := time.Millisecond * 10
+	// Cacheable Function
+	var getNumWithLruCache = gofnext.CacheFn1Err(getNum, &gofnext.Config{
+		TTL:      ttl,
+		ReuseTTL: reuseTTL,
+		CacheMap: gofnext.NewCacheLru(maxCacheSize),
+	})
+
+	score, _ := getNumWithLruCache(1)
+	gofnext.AssertEqual(t, score, 2)
+	// wait ttl
+	time.Sleep(ttl)
+	score, _ = getNumWithLruCache(1)
+	gofnext.AssertEqual(t, score, 2)
+
+	// wait reuseTTL
+	time.Sleep(reuseTTL)
+	score, _ = getNumWithLruCache(1)
+	gofnext.AssertEqual(t, score, 3)
+
+	// test function call count
+	count := executeCount.Load()
+	if count != 2 {
+		t.Errorf("executeCount should be 2, but get %d", count)
 	}
 
 }

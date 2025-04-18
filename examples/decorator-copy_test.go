@@ -9,7 +9,7 @@ import (
 func TestCacheFuncCopy(t *testing.T) {
 	count := 0
 	getUser := func(age int) UserInfo {
-		count +=1
+		count += 1
 		return UserInfo{Name: "Alex", Age: age}
 	}
 

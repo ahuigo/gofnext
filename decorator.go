@@ -26,6 +26,11 @@ type Config struct {
 	NeedDumpKey        bool
 	HashKeyPointerAddr bool
 	HashKeyFunc        func(args ...any) []byte
+	/* ReuseTTl controls how to handle expired cache:
+	if ReuseTTl>0: When cache is expired but within ReuseTTl duration, return the expired cache and update it asynchronously
+	if ReuseTTl=0: When cache is expired, wait for the cache to be updated
+	*/
+	ReuseTTL time.Duration
 }
 
 type cachedFn[K1, K2, K3 any, V any] struct {
@@ -66,6 +71,7 @@ func (c *cachedFn[K1, K2, K3, V]) setConfig(config *Config) *cachedFn[K1, K2, K3
 		panic("TTL should not be less than 0")
 	}
 	c.cacheMap.SetErrTTL(config.ErrTTL)
+	c.cacheMap.SetReuseTTL(config.ReuseTTL)
 	if config.TTL > 0 {
 		c.cacheMap.SetTTL(config.TTL)
 	}
@@ -341,7 +347,7 @@ func (c *cachedFn[K1, K2, K3, V]) invoke3err(key1 K1, key2 K2, key3 K3) (retv V,
 checkCache:
 	checkCacheCount++
 	pkeyLock.RLock()
-	value, hasCache, err := c.cacheMap.Load(pkey)
+	value, hasCache, alive, err := c.cacheMap.Load(pkey)
 	pkeyLock.RUnlock()
 
 	// 3.1 check if marshal needed
@@ -356,7 +362,7 @@ checkCache:
 	// 4. Execute getFunc(only once)
 	if !hasCache {
 		// 4.1 try lock
-		// If 100 goroutines call the same function at the same time,
+		// If multiple goroutines call the same function at the same time,
 		// only one goroutine can execute the getFunc.
 		isLocked := pkeyLock.TryLock()
 
@@ -368,17 +374,34 @@ checkCache:
 				// Avoid all goroutines calling TryCount simultaneously, which may lead to failure.
 				sleepRandom(0, 50*time.Millisecond)
 
-				// try lock again
+				// try check again
 				goto checkCache
 			}
+			// if checkCacheCount >= 3, run lock and getFunc
 			pkeyLock.Lock()
 		}
 		defer pkeyLock.Unlock()
 
 		// 4.2 check cache again
-		val, err := c.getFunc(key1, key2, key3)
-		c.cacheMap.Store(pkey, &val, err)
-		return val, err
+		val, err2 := c.getFunc(key1, key2, key3)
+		c.cacheMap.Store(pkey, &val, err2)
+		return val, err2
+	} else if hasCache && !alive {
+		// If the cache is not alive,  it will return the expired cache (and update the cache asynchronously)
+		// 5.1 try lock
+		// If 100 goroutines call the same function at the same time,
+		// only one goroutine can execute the getFunc.
+		go func() {
+			isLocked := pkeyLock.TryLock()
+			if !isLocked {
+				return
+			}
+			defer pkeyLock.Unlock()
+			// 5.2 check cache again
+			val, err2 := c.getFunc(key1, key2, key3)
+			c.cacheMap.Store(pkey, &val, err2)
+		}()
+
 	}
 	return *(value).(*V), err
 }

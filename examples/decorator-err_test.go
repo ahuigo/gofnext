@@ -105,7 +105,7 @@ func TestNeedCacheErrWithTtlTimeout(t *testing.T) {
 
 	// 3. check count
 	if count.Load() != 2 {
-		t.Errorf("Execute count should be 1, but get %d", count.Load())
+		t.Errorf("Execute count should be 2, but get %d", count.Load())
 	}
 }
 
