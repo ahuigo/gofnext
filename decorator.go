@@ -356,7 +356,8 @@ checkCache:
 		if err == nil {
 			err = err2
 		}
-		return retv, err
+		value = &retv
+		// return retv, err
 	}
 
 	// 4. Execute getFunc(only once)
