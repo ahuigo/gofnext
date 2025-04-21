@@ -123,3 +123,28 @@ func TestRedisCacheFuncWithTTLTimeout(t *testing.T) {
 		t.Errorf("executeCount should be 5, but get %d", executeCount)
 	}
 }
+
+func TestRedisCacheIntFloat(t *testing.T) {
+	// Original function
+	getNum := func(i any) (any) {
+		return i
+	}
+
+	// Cacheable Function
+	getNumWithCache := gofnext.CacheFn1(
+		getNum,
+		&gofnext.Config{
+			CacheMap: gofnext.NewCacheRedis("redis-cache-key").ClearAll(),
+		},
+	) 
+
+	// Execute the function multi times in parallel.
+	i := getNumWithCache(98)
+	if i.(int) != 98 {
+		t.Errorf("i should be 98, but get %d", i)
+	}
+	j := getNumWithCache(98.5)
+	if j.(float64) != 98.5 {
+		t.Errorf("j should be 98.5, but get %f", j)
+	}
+}
