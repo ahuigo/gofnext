@@ -307,9 +307,8 @@ e.g.
 如果存在error时, 也需要缓存的话。 参考: https://github.com/ahuigo/gofnext/blob/main/examples/decorator-err_test.go
 
     gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
-        ErrTTL: 0, // 不会缓存error
+        ErrTTL<=0, // 不会缓存error
         ErrTTL: time.Seconds * 60, // err缓存的errTTL 是60秒
-        ErrTTL: -1, // 只依赖TTL参数; ErrTTL 无效
     }) 
 
 ### 哈希指针地址还是值？

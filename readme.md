@@ -333,13 +333,11 @@ Refer to: https://github.com/ahuigo/gofnext/blob/main/examples/decorator-err_tes
 
     gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
         /* Set error cache's TTL time:
-            if ErrTTL=0, do not cache error;
+            if ErrTTL<=0, do not cache error;
             if ErrTTL>0, error cache's live time is ErrTTL;
-            if ErrTTL=-1, error cache's live time is controlled by TTL
         */
         ErrTTL: 0, // Do not cache error(default:0)
         ErrTTL: time.Seconds * 60, // error cache's live time is 60s
-        ErrTTL: -1, // rely on TTL only
     }) 
 
 ### Hash Pointer address or value?

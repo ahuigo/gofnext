@@ -18,9 +18,8 @@ type Config struct {
 	*/
 	TTL time.Duration
 	/* Set error cache's TTL time:
-	if ErrTTL=0, do not cache error;
-	if ErrTTL>0, error cache's live time is ErrTTL;
-	if ErrTTL=-1, error cache's live time is controlled by TTL
+	if ErrTTL <= 0, do not cache error;
+	if ErrTTL > 0, error cache's live time is ErrTTL;
 	*/
 	ErrTTL             time.Duration
 	CacheMap           CacheMap
