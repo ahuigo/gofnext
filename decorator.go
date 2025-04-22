@@ -1,9 +1,7 @@
 package gofnext
 
 import (
-	"bytes"
 	"context"
-	"encoding/gob"
 	"reflect"
 	"sync"
 	"time"
@@ -353,8 +351,7 @@ checkCache:
 	// 3.1 check if marshal needed
 	if hasCache && c.cacheMap.NeedMarshal() {
 		// err2 := json.Unmarshal(value.([]byte), &retv)
-		dec := gob.NewDecoder(bytes.NewBuffer(value.([]byte)))
-		err2 := dec.Decode(&retv)
+		err2 := unmarshalMsgpack(value.([]byte), &retv)
 		if err == nil {
 			err = err2
 		}

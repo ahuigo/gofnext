@@ -67,7 +67,7 @@ func TestRedisCacheFuncDropErr(t *testing.T) {
 		// Cacheable Function
 		getUserScoreFromDbWithCache := gofnext.CacheFn1Err(getUserScore, &gofnext.Config{
 			TTL:      500 * time.Second,
-			ErrTTL:   errTTL, 
+			ErrTTL:   errTTL,
 			CacheMap: gofnext.NewCacheRedis("redis-cache-key").ClearAll(),
 		})
 
@@ -76,10 +76,10 @@ func TestRedisCacheFuncDropErr(t *testing.T) {
 		getUserScoreFromDbWithCache(3)
 
 		if executeCount != expectedCount {
-			t.Errorf("executeCount should be %d, but get %d",expectedCount, executeCount)
+			t.Errorf("executeCount should be %d, but get %d", expectedCount, executeCount)
 		}
 	}
-	fn(0, 2) // errTTL <= 0, drop error
-	fn(-1, 2) // errTTL <= 0, drop error
+	fn(0, 2)           // errTTL <= 0, drop error
+	fn(-1, 2)          // errTTL <= 0, drop error
 	fn(time.Second, 1) // errTTL > 0, keep error
 }

@@ -1,8 +1,6 @@
 package gofnext
 
 import (
-	"bytes"
-	"encoding/gob"
 	"errors"
 	"hash/fnv"
 	"strconv"
@@ -110,16 +108,16 @@ func (m *redisMap) strkey(key any) string {
 }
 
 func (m *redisMap) Store(key, value any, err0 error) {
-	buf := &bytes.Buffer{}
-	if err := gob.NewEncoder(buf).Encode(value); err != nil {
-		slogger.Error("gofnext.redisMap", "err", err.Error())
+	buf, err := marshalMsgpack(value)
+	if err != nil {
+		slogger.Error("gofnext.redisMap: marshal", "err", err.Error())
 		return
 	}
 
 	pkey := m.strkey(key)
 	// data, _ := json.Marshal(value)
 	cacheData := redisData{
-		Data: buf.Bytes(),
+		Data: buf,
 		// TTL:  m.ttl,
 	}
 	if err0 != nil && m.errTtl <= 0 {
@@ -134,14 +132,12 @@ func (m *redisMap) Store(key, value any, err0 error) {
 	}
 
 	// encode value to bytes
-	buf = &bytes.Buffer{}
-	if err := gob.NewEncoder(buf).Encode(cacheData); err != nil {
+	if buf, err = marshalMsgpack(cacheData); err != nil {
 		slogger.Error("gofnext.redisMap", "err", err.Error())
 		return
 	}
-	// val, _ := json.Marshal(cacheData)
-	val := buf.Bytes()
-	err := m.redisClient.HSet(m.redisFuncKey, pkey, val).Err()
+	// buf, _ := json.Marshal(cacheData)
+	err = m.redisClient.HSet(m.redisFuncKey, pkey, buf).Err()
 	if err != nil {
 		slogger.Error("gofnext.redisMap", "err", err.Error())
 	}
@@ -161,14 +157,11 @@ func (m *redisMap) Load(key any) (value any, hasCache, alive bool, err error) {
 		return
 	}
 	cacheData := redisData{}
-	if err = gob.NewDecoder(bytes.NewReader(val)).Decode(&cacheData); err != nil {
-		slogger.Error("gofnext.redisMap", "err", err.Error())
+	err = unmarshalMsgpack(val, &cacheData)
+	if err != nil {
+		slogger.Error("gofnext.redisMap:decode", "err", err.Error())
 		return
 	}
-	// err = json.Unmarshal(val, &cacheData)
-	// if err != nil {
-	// 	return
-	// }
 
 	value = cacheData.Data
 	if cacheData.Err != nil {
