@@ -187,6 +187,50 @@ Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/exampl
         }
     }
 
+### Cache method
+Original method:
+
+    type User Struct{}
+    func NewUser() (*User){
+        u := &User{}
+        return u
+    }
+
+    func (u *User) getUserInfo(uid int) (*User, error){  
+        ...  
+    }
+
+Cached method(singleton mode):
+
+    type User Struct{}
+    var getUserInfoCached func(uid int) (&User, error)
+    func NewUser() *User{
+        u := &User{}
+       	getUserInfoCached = gofnext.CacheFn1Err(u.getUserInfo) 
+        return u
+    }
+
+    // proxy method with cached
+    func (u *User) GetUserInfo(uid int) (*User, error){  
+        return getUserInfoCached(uid)
+    }
+
+    func (u *User) getUserInfo(uid int) (*User, error){  
+        ...  
+    }
+
+Cached method(factory mode):
+
+    type User Struct{
+        getUserInfoCached func(uid int) (&User, error)
+    }
+    func NewUser() *User{
+        u := &User{}
+       	u.getUserInfoCached = gofnext.CacheFn1Err(u.getUserInfo) 
+        return u
+    }
+    ....
+
 ### Cache function with more params(>3)
 Refer to: [decorator example](https://github.com/ahuigo/gofnext/blob/main/examples/decorator_test.go)
 

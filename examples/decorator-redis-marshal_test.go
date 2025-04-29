@@ -10,6 +10,7 @@ func TestRedisCacheMapIntFloatStruct(t *testing.T) {
 	count := 0
 	type Stu struct {
 		Age int
+        private int
 	}
 	type M = map[string]any
 	type Data struct {
