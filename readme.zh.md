@@ -32,7 +32,7 @@
     - [自定义哈希键函数](#自定义哈希键函数)
   - [Roadmap](#roadmap)
 
-[Egnlish](/)/[中文]()
+[Egnlish](/) / [DeepWiki](https://deepwiki.com/ahuigo/gofnext)
 
 ## 装饰器cases
 

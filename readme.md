@@ -14,6 +14,7 @@ Cache decorators(concurrent safe): Similar to Python's `functools.cache` and `fu
 
 In addition to memory caching, it also supports Redis caching and custom caching.
 
+[DeepWiki](https://deepwiki.com/ahuigo/gofnext)
 [简体中文](/readme.zh.md)
 
 - [🛠️ Go function extended](#️-go-function-extended)
