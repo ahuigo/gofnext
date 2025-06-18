@@ -203,22 +203,33 @@ Original method:
 
 Cached method(singleton mode):
 
-    type User Struct{}
-    var getUserInfoCached func(uid int) (&User, error)
-    func NewUser() *User{
-        u := &User{}
-       	getUserInfoCached = gofnext.CacheFn1Err(u.getUserInfo) 
-        return u
-    }
+```
+type User struct {}
+var (
+    getUserInfoCached func(uid int) (*User, error)
+    once             sync.Once
+)
 
-    // proxy method with cached
-    func (u *User) GetUserInfo(uid int) (*User, error){  
-        return getUserInfoCached(uid)
-    }
+func NewUser() *User {
+    u := &User{}
+    once.Do(func() {
+        // use cache decorator
+        getUserInfoCached = gofnext.CacheFn1Err(u.getUserInfo)
+    })   
+    return u
+}
 
-    func (u *User) getUserInfo(uid int) (*User, error){  
-        ...  
-    }
+// Cached method
+func (u *User) GetUserInfo(uid int) (*User, error) {
+    return getUserInfoCached(uid)
+}
+
+// Origin method
+func (u *User) getUserInfo(uid int) (*User, error) {
+    fmt.Printf("mock data: uid=%d\n", uid)
+    return &User{}, nil
+}
+```
 
 Cached method(factory mode):
 
